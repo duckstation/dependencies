@@ -1,0 +1,165 @@
+name: Build Dependencies
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: "💻 Windows"
+    runs-on: windows-2022
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Build x64 Dependencies
+      run: .\build-dependencies-windows-x64.bat -skip-cleanup
+
+    - name: Build ARM64 Dependencies
+      run: .\build-dependencies-windows-arm64.bat -skip-cleanup
+
+    - name: Create Archives
+      shell: cmd
+      run: |
+        "C:\Program Files\7-Zip\7z.exe" a -mx9 -r deps-windows-x64.zip deps-x64
+        "C:\Program Files\7-Zip\7z.exe" a -mx9 -r deps-windows-arm64.zip deps-arm64
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-windows
+        path: |
+          deps-windows-x64.zip
+          deps-windows-arm64.zip
+        compression-level: 0
+        if-no-files-found: error
+
+  build-macos:
+    name: "🍎 MacOS"
+    runs-on: macos-15
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Use Xcode 26
+      run: sudo xcode-select -s /Applications/Xcode_26.0.app
+
+    - name: Build Dependencies
+      run: ./build-dependencies-mac.sh "$HOME/duckstation-deps"
+
+    - name: Create Archive
+      run: tar -C "$HOME" -cJf deps-macos-universal.tar.xz duckstation-deps
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-macos-universal
+        path: deps-macos-universal.tar.xz
+        compression-level: 0
+        if-no-files-found: error
+
+  build-linux-x64:
+    name: "🐧 Linux x64"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Packages
+      run: ./install-packages-linux.sh
+
+    - name: Build Dependencies
+      run: ./build-dependencies-linux.sh "$HOME/duckstation-deps"
+
+    - name: Build FFmpeg
+      run: ./build-ffmpeg-linux.sh "$HOME/duckstation-deps"
+
+    - name: Create Archive
+      run: tar -C "$HOME" -cJf deps-linux-x64.tar.xz duckstation-deps
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-linux-x64
+        path: deps-linux-x64.tar.xz
+        compression-level: 0
+        if-no-files-found: error
+
+  build-linux-cross:
+    name: "🐧 Linux ${{ matrix.arch }}"
+    needs: build-linux-x64
+    runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/duckstation/cross-build-${{ matrix.arch }}:latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ["arm64", "armhf"]
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Download x64 Artifact
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-linux-x64
+        path: ./deps-linux-x64
+
+    - name: Extract x64 Artifact
+      run: |
+        tar -C "$HOME" -xvf deps-linux-x64/deps-linux-x64.tar.xz
+
+    - name: Build Dependencies
+      run: |
+        ./build-dependencies-linux-cross.sh "$HOME/duckstation-deps" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "$HOME/duckstation-deps-${{matrix.arch}}"
+
+    - name: Create Archive
+      run: tar -C "$HOME" -cJf deps-linux-cross-${{ matrix.arch }}.tar.xz duckstation-deps-${{matrix.arch}}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-linux-cross-${{ matrix.arch }}
+        path: deps-linux-cross-${{ matrix.arch }}.tar.xz
+        compression-level: 0
+        if-no-files-found: error
+
+  create-release:
+    name: "📤 Create Release"
+    needs: [build-windows, build-macos, build-linux-x64, build-linux-cross]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Get Current Date
+      id: date
+      run: echo "date=$(date +'%Y%m%d')" >> "$GITHUB_OUTPUT"
+
+    - name: Download All Artifacts
+      uses: actions/download-artifact@v6
+      with:
+        path: artifacts
+
+    - name: Create Release
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        TAG="release-${{ steps.date.outputs.date }}"
+        gh release delete "$TAG" --yes --cleanup-tag || true
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes "Dependencies built on $(date +'%Y-%m-%d') from commit ${{ github.sha }}." \
+          artifacts/deps-windows/deps-windows-x64.zip \
+          artifacts/deps-windows/deps-windows-arm64.zip \
+          artifacts/deps-macos-universal/deps-macos-universal.tar.xz \
+          artifacts/deps-linux-x64/deps-linux-x64.tar.xz \
+          artifacts/deps-linux-cross-arm64/deps-linux-cross-arm64.tar.xz \
+          artifacts/deps-linux-cross-armhf/deps-linux-cross-armhf.tar.xz

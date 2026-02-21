@@ -1,0 +1,67 @@
+PERSONAL USE LICENSE
+
+Copyright (c) 2026 Stenzek <stenzek@gmail.com>
+
+TERMS AND CONDITIONS
+
+1. GRANT OF LICENSE
+
+   Permission is hereby granted, free of charge, to any individual obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to use, copy, and modify the Software solely for personal, non-commercial
+   purposes, subject to the following conditions and restrictions.
+
+2. RESTRICTIONS
+
+   a. NON-COMMERCIAL USE ONLY
+      The Software may not be used, in whole or in part, for any commercial
+      purpose. Commercial purposes include, but are not limited to: selling,
+      licensing, or otherwise monetizing the Software or any derivative works;
+      using the Software as part of a commercial product, service, or workflow;
+      or using the Software on behalf of a business, organization, or entity
+      for any revenue-generating activity.
+
+   b. PROHIBITION ON USE IN BUILD RECIPES AND PACKAGES
+      The Software, including any scripts, tools, or components contained
+      herein, may NOT be incorporated into, referenced by, or executed as part
+      of the following without the express prior written permission of the
+      copyright holder:
+        - Build recipes of any kind (including but not limited to Makefiles,
+          Dockerfiles, shell build scripts, CI/CD pipeline definitions, and
+          build system configurations such as those used by Homebrew, Nix,
+          Portage, AUR, RPM spec files, Debian packaging, vcpkg, Conan, or
+          any equivalent package build system);
+        - Software packages, package repositories, or package registries
+          (including but not limited to PyPI, npm, RubyGems, crates.io,
+          NuGet, Conda, Flatpak, Snap, AppImage, or any equivalent
+          distribution system).
+
+   c. REDISTRIBUTION
+      Redistribution of the Software in unmodified form is permitted, provided
+      that this license notice and all copyright notices are retained in full
+      and redistributed alongside the Software. Redistribution of modified
+      versions of the Software is not permitted without the express prior
+      written permission of the copyright holder.
+
+3. ATTRIBUTION
+
+   Any permitted use of the Software must retain this license notice, the
+   above copyright notice, and the following disclaimer in all copies or
+   substantial portions of the Software.
+
+4. DISCLAIMER OF WARRANTIES
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL
+   THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF,
+   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+5. GOVERNING LAW
+
+   This license shall be governed by and construed in accordance with
+   applicable law. Any disputes arising under this license shall be subject to
+   the exclusive jurisdiction of the courts of the copyright holder's
+   jurisdiction.
