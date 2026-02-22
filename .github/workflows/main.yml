@@ -50,7 +50,7 @@ jobs:
     - uses: actions/checkout@v6
 
     - name: Use Xcode 26
-      run: sudo xcode-select -s /Applications/Xcode_26.0.app
+      run: sudo xcode-select -s /Applications/Xcode_26.2.app
 
     - name: Build Dependencies
       run: ./build-dependencies-mac.sh macos-universal
