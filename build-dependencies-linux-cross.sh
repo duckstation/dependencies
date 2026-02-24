@@ -3,61 +3,61 @@
 set -e
 
 if [ "$#" -lt 4 ]; then
-    echo "Syntax: $0 [-skip-download] [-skip-cleanup] [-only-download] <host directory> <cross architecture> <cross chroot> <output directory>"
-    exit 1
+  echo "Syntax: $0 [-skip-download] [-skip-cleanup] [-only-download] <host directory> <cross architecture> <cross chroot> <output directory>"
+  exit 1
 fi
 
 for arg in "$@"; do
-	if [ "$arg" == "-skip-download" ]; then
-		echo "Not downloading sources."
-		SKIP_DOWNLOAD=true
-		shift
-	elif [ "$arg" == "-skip-cleanup" ]; then
-		echo "Not removing build directory."
-		SKIP_CLEANUP=true
-		shift
-	elif [ "$arg" == "-only-download" ]; then
-		echo "Only downloading sources."
-		ONLY_DOWNLOAD=true
-		shift
-	fi
+  if [ "$arg" == "-skip-download" ]; then
+    echo "Not downloading sources."
+    SKIP_DOWNLOAD=true
+    shift
+  elif [ "$arg" == "-skip-cleanup" ]; then
+    echo "Not removing build directory."
+    SKIP_CLEANUP=true
+    shift
+  elif [ "$arg" == "-only-download" ]; then
+    echo "Only downloading sources."
+    ONLY_DOWNLOAD=true
+    shift
+  fi
 done
 
 SCRIPTDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 NPROCS="$(getconf _NPROCESSORS_ONLN)"
 HOSTDIR="$1"
 if [ "${HOSTDIR:0:1}" != "/" ]; then
-	HOSTDIR="$PWD/$HOSTDIR"
+  HOSTDIR="$PWD/$HOSTDIR"
 fi
 CROSSARCH="$2"
 SYSROOTDIR="$3"
 if [ "${SYSROOTDIR:0:1}" != "/" ]; then
-	SYSROOTDIR="$PWD/$SYSROOTDIR"
+  SYSROOTDIR="$PWD/$SYSROOTDIR"
 fi
 INSTALLDIR="$4"
 if [ "${INSTALLDIR:0:1}" != "/" ]; then
-	INSTALLDIR="$PWD/$INSTALLDIR"
+  INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 TOOLCHAINFILE="$INSTALLDIR/toolchain.cmake"
 CMAKE_COMMON=(
-	-DCMAKE_BUILD_TYPE=Release
-	-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE"
-	-DCMAKE_PREFIX_PATH="$INSTALLDIR"
-	-DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
+  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE"
+  -DCMAKE_PREFIX_PATH="$INSTALLDIR"
+  -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
 )
 
 # Determine architecture.
 if [ "$CROSSARCH" == "arm64" ]; then
-	CROSSSYSARCH="aarch64"
-	CROSSTRIPLET="aarch64-linux-gnu"
-	CMAKEPROCESSOR="aarch64"
+  CROSSSYSARCH="aarch64"
+  CROSSTRIPLET="aarch64-linux-gnu"
+  CMAKEPROCESSOR="aarch64"
 elif [ "$CROSSARCH" == "armhf" ]; then
-	CROSSSYSARCH="armhf"
-	CROSSTRIPLET="arm-linux-gnueabihf"
-	CMAKEPROCESSOR="armv7-a"
+  CROSSSYSARCH="armhf"
+  CROSSTRIPLET="arm-linux-gnueabihf"
+  CMAKEPROCESSOR="armv7-a"
 else
-	echo "Unknown cross arch $CROSSARCH"
-	exit 1
+  echo "Unknown cross arch $CROSSARCH"
+  exit 1
 fi
 
 source "$SCRIPTDIR/versions"
@@ -67,29 +67,29 @@ mkdir -p deps-build
 cd deps-build
 
 if [[ "$SKIP_DOWNLOAD" != true && ! -f "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz" ]]; then
-	curl -C - -L \
-		-o "brotli-$BROTLI.tar.gz" "https://github.com/google/brotli/archive/refs/tags/v$BROTLI.tar.gz" \
-		-o "freetype-$FREETYPE.tar.gz" "https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE/freetype-$FREETYPE.tar.gz/download" \
-		-o "harfbuzz-$HARFBUZZ.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/$HARFBUZZ.tar.gz" \
-		-O "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO/libjpeg-turbo-$LIBJPEGTURBO.tar.gz" \
-		-O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
-		-O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
-		-O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
-		-o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
-		-O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
-		-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtwayland-everywhere-src-$QT.tar.xz"  \
-		-o "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz" "https://github.com/ianlancetaylor/libbacktrace/archive/$LIBBACKTRACE_COMMIT.tar.gz" \
-		-O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
-		-o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
-		-o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
-		-o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
-		-o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
-		-o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
+  curl -C - -L \
+    -o "brotli-$BROTLI.tar.gz" "https://github.com/google/brotli/archive/refs/tags/v$BROTLI.tar.gz" \
+    -o "freetype-$FREETYPE.tar.gz" "https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE/freetype-$FREETYPE.tar.gz/download" \
+    -o "harfbuzz-$HARFBUZZ.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/$HARFBUZZ.tar.gz" \
+    -O "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO/libjpeg-turbo-$LIBJPEGTURBO.tar.gz" \
+    -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
+    -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
+    -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
+    -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
+    -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtwayland-everywhere-src-$QT.tar.xz"  \
+    -o "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz" "https://github.com/ianlancetaylor/libbacktrace/archive/$LIBBACKTRACE_COMMIT.tar.gz" \
+    -O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
+    -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
+    -o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
+    -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
+    -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
+    -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
 fi
 
 cat > SHASUMS <<EOF
@@ -121,16 +121,16 @@ shasum -a 256 --check SHASUMS
 
 # Have to clone with git, because it does version detection.
 if [[ "$SKIP_DOWNLOAD" != true && ! -d "SPIRV-Cross" ]]; then
-	git clone https://github.com/KhronosGroup/SPIRV-Cross/ -b $SPIRV_CROSS_TAG --depth 1
-	if [ "$(git --git-dir=SPIRV-Cross/.git rev-parse HEAD)" != "$SPIRV_CROSS_SHA" ]; then
-		echo "SPIRV-Cross version mismatch, expected $SPIRV_CROSS_SHA, got $(git rev-parse HEAD)"
-		exit 1
-	fi
+  git clone https://github.com/KhronosGroup/SPIRV-Cross/ -b $SPIRV_CROSS_TAG --depth 1
+  if [ "$(git --git-dir=SPIRV-Cross/.git rev-parse HEAD)" != "$SPIRV_CROSS_SHA" ]; then
+    echo "SPIRV-Cross version mismatch, expected $SPIRV_CROSS_SHA, got $(git rev-parse HEAD)"
+    exit 1
+  fi
 fi
 
 # Only downloading sources?
 if [ "$ONLY_DOWNLOAD" == true ]; then
-	exit 0
+  exit 0
 fi
 
 # Stop pkg-config picking up host files.
@@ -232,8 +232,8 @@ rm -fr "libwebp-$LIBWEBP"
 tar xf "libwebp-$LIBWEBP.tar.gz"
 cd "libwebp-$LIBWEBP"
 cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
-	-DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-	-DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
+  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
+  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -244,9 +244,9 @@ rm -fr "libzip-$LIBZIP"
 tar xf "libzip-$LIBZIP.tar.gz"
 cd "libzip-$LIBZIP"
 cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
-	-DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
-	-DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
-	-DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
+  -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
+  -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
+  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -426,7 +426,7 @@ cd ..
 rm -fr "soundtouch-$SOUNDTOUCH_COMMIT"
 
 if [ "$SKIP_CLEANUP" != true ]; then
-	echo "Cleaning up..."
-	cd ..
-	rm -fr deps-build
+  echo "Cleaning up..."
+  cd ..
+  rm -fr deps-build
 fi

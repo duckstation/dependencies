@@ -31,7 +31,7 @@ NPROCS="$(getconf _NPROCESSORS_ONLN)"
 SCRIPTDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 INSTALLDIR="$1"
 if [ "${INSTALLDIR:0:1}" != "/" ]; then
-	INSTALLDIR="$PWD/$INSTALLDIR"
+    INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 
 source "$SCRIPTDIR/versions"
@@ -44,10 +44,10 @@ export LDFLAGS="-L$INSTALLDIR/lib $LDFLAGS"
 export CFLAGS="-I$INSTALLDIR/include $CFLAGS"
 export CXXFLAGS="-I$INSTALLDIR/include $CXXFLAGS"
 CMAKE_COMMON=(
-	-DCMAKE_BUILD_TYPE="Release"
-	-DCMAKE_SHARED_LINKER_FLAGS="-dead_strip -dead_strip_dylibs"
-	-DCMAKE_PREFIX_PATH="$INSTALLDIR"
-	-DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
+  -DCMAKE_BUILD_TYPE="Release"
+  -DCMAKE_SHARED_LINKER_FLAGS="-dead_strip -dead_strip_dylibs"
+  -DCMAKE_PREFIX_PATH="$INSTALLDIR"
+  -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
 )
 CMAKE_ARCH_X64=-DCMAKE_OSX_ARCHITECTURES="x86_64"
 CMAKE_ARCH_ARM64=-DCMAKE_OSX_ARCHITECTURES="arm64"
@@ -55,9 +55,9 @@ CMAKE_ARCH_UNIVERSAL=-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
 
 # SBOM generation appears to be broken on MacOS, and I can't be arsed to debug it.
 CMAKE_COMMON_QT=(
-	-DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
-	-DCMAKE_BUILD_RPATH="$INSTALLDIR/lib"
-	-DQT_GENERATE_SBOM=OFF
+  -DCMAKE_OSX_ARCHITECTURES="x86_64;arm64"
+  -DCMAKE_BUILD_RPATH="$INSTALLDIR/lib"
+  -DQT_GENERATE_SBOM=OFF
 )
 
 cat > SHASUMS <<EOF
@@ -85,40 +85,40 @@ $SOUNDTOUCH_GZ_HASH  soundtouch-$SOUNDTOUCH_COMMIT.tar.gz
 EOF
 
 curl -L \
-	-o "brotli-$BROTLI.tar.gz" "https://github.com/google/brotli/archive/refs/tags/v$BROTLI.tar.gz" \
-	-o "freetype-$FREETYPE.tar.gz" "https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE/freetype-$FREETYPE.tar.gz/download" \
-	-o "harfbuzz-$HARFBUZZ.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/$HARFBUZZ.tar.gz" \
-	-O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
-	-O "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO/libjpeg-turbo-$LIBJPEGTURBO.tar.gz" \
-	-O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
-	-O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
-	-O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
-	-O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
-	-O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" \
-	-O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
-	-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
-	-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
-	-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
-	-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
-	-O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
-	-o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
-	-o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
-	-o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
-	-o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
-	-o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
+  -o "brotli-$BROTLI.tar.gz" "https://github.com/google/brotli/archive/refs/tags/v$BROTLI.tar.gz" \
+  -o "freetype-$FREETYPE.tar.gz" "https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE/freetype-$FREETYPE.tar.gz/download" \
+  -o "harfbuzz-$HARFBUZZ.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/$HARFBUZZ.tar.gz" \
+  -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
+  -O "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO/libjpeg-turbo-$LIBJPEGTURBO.tar.gz" \
+  -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
+  -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
+  -O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
+  -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
+  -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" \
+  -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
+  -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
+  -o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
+  -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
+  -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
+  -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
 
 shasum -a 256 --check SHASUMS
 
 # Have to clone with git, because it does version detection.
 if [ ! -d "SPIRV-Cross" ]; then
   git clone https://github.com/KhronosGroup/SPIRV-Cross/ -b $SPIRV_CROSS_TAG --depth 1
-	if [ "$(git --git-dir=SPIRV-Cross/.git rev-parse HEAD)" != "$SPIRV_CROSS_SHA" ]; then
-		echo "SPIRV-Cross version mismatch, expected $SPIRV_CROSS_SHA, got $(git rev-parse HEAD)"
-		exit 1
-	fi
+    if [ "$(git --git-dir=SPIRV-Cross/.git rev-parse HEAD)" != "$SPIRV_CROSS_SHA" ]; then
+      echo "SPIRV-Cross version mismatch, expected $SPIRV_CROSS_SHA, got $(git rev-parse HEAD)"
+      exit 1
+    fi
 fi
 
-echo "Installing libpng..."
+echo "Building libpng..."
 rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
 cd "libpng-$LIBPNG"
@@ -145,7 +145,7 @@ make -C build install
 cd ..
 rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
 
-echo "Installing Zstandard..."
+echo "Building Zstandard..."
 rm -fr "zstd-$ZSTD"
 tar xf "zstd-$ZSTD.tar.gz"
 cd "zstd-$ZSTD"
@@ -158,7 +158,7 @@ make -C build-dir install
 cd ..
 rm -fr "zstd-$ZSTD"
 
-echo "Installing Brotli..."
+echo "Building Brotli..."
 rm -fr "brotli-$BROTLI"
 tar xf "brotli-$BROTLI.tar.gz"
 cd "brotli-$BROTLI"
@@ -168,31 +168,31 @@ cmake --install build
 cd ..
 rm -fr "brotli-$BROTLI"
 
-echo "Installing WebP..."
+echo "Building WebP..."
 rm -fr "libwebp-$LIBWEBP"
 tar xf "libwebp-$LIBWEBP.tar.gz"
 cd "libwebp-$LIBWEBP"
 cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -B build \
-	-DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-	-DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
+  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
+  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
 make -C build "-j$NPROCS"
 cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -B build-arm64 \
-	-DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-	-DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
+  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
+  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
 make -C build-arm64 "-j$NPROCS"
 merge_binaries $(realpath build) $(realpath build-arm64)
 make -C build install
 cd ..
 rm -fr "libwebp-$LIBWEBP"
 
-echo "Installing libzip..."
+echo "Building libzip..."
 rm -fr "libzip-$LIBZIP"
 tar xf "libzip-$LIBZIP.tar.gz"
 cd "libzip-$LIBZIP"
 cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_UNIVERSAL" -B build \
-	-DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
-	-DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
-	-DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
+  -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
+  -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
+  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
 cmake --build build --parallel
 cmake --install build
 cd ..
@@ -220,7 +220,7 @@ cmake --install build
 cd ..
 rm -fr "harfbuzz-$HARFBUZZ"
 
-echo "Installing SDL..."
+echo "Building SDL..."
 rm -fr "SDL3-$SDL3"
 tar xf "SDL3-$SDL3.tar.gz"
 cd "SDL3-$SDL3"
@@ -230,32 +230,32 @@ make -C build install
 cd ..
 rm -fr "SDL3-$SDL3"
 
-echo "Installing FFmpeg..."
+echo "Building FFmpeg..."
 rm -fr "ffmpeg-$FFMPEG_VERSION"
 tar xf "ffmpeg-$FFMPEG_VERSION.tar.xz"
 cd "ffmpeg-$FFMPEG_VERSION"
 mkdir build
 cd build
 LDFLAGS="-dead_strip -dead_strip_dylibs $LDFLAGS" \
-	../configure --prefix="$INSTALLDIR" \
-	--enable-cross-compile --arch=x86_64 --cc='clang -arch x86_64' --cxx='clang++ -arch x86_64' \
-	--disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
-	--enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
-	--enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
-	--enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
-	--enable-protocol='file'
+  ../configure --prefix="$INSTALLDIR" \
+  --enable-cross-compile --arch=x86_64 --cc='clang -arch x86_64' --cxx='clang++ -arch x86_64' \
+  --disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
+  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
+  --enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
+  --enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
+  --enable-protocol='file'
 make "-j$NPROCS"
 cd ..
 mkdir build-arm64
 cd build-arm64
 LDFLAGS="-dead_strip -dead_strip_dylibs $LDFLAGS" \
-	../configure --prefix="$INSTALLDIR" \
-	--enable-cross-compile --arch=arm64 --cc='clang -arch arm64' --cxx='clang++ -arch arm64' \
-	--disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
-	--enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
-	--enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
-	--enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
-	--enable-protocol='file'
+  ../configure --prefix="$INSTALLDIR" \
+  --enable-cross-compile --arch=arm64 --cc='clang -arch arm64' --cxx='clang++ -arch arm64' \
+  --disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
+  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
+  --enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
+  --enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
+  --enable-protocol='file'
 make "-j$NPROCS"
 cd ..
 merge_binaries $(realpath build) $(realpath build-arm64)
@@ -265,7 +265,7 @@ cd ../..
 rm -fr "ffmpeg-$FFMPEG_VERSION"
 
 # MoltenVK already builds universal binaries, nothing special to do here.
-echo "Installing MoltenVK..."
+echo "Building MoltenVK..."
 rm -fr "MoltenVK-${MOLTENVK}"
 tar xf "v$MOLTENVK_VERSION.tar.gz"
 cd "MoltenVK-${MOLTENVK_VERSION}"
@@ -275,7 +275,7 @@ cp Package/Latest/MoltenVK/dynamic/dylib/macOS/libMoltenVK.dylib "$INSTALLDIR/li
 cd ..
 rm -fr "MoltenVK-${MOLTENVK_VERSION}"
 
-echo "Installing Qt Base..."
+echo "Building Qt Base..."
 rm -fr "qtbase-everywhere-src-$QT"
 tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
@@ -297,7 +297,7 @@ make -C build install
 cd ..
 rm -fr "qtbase-everywhere-src-$QT"
 
-echo "Installing Qt SVG..."
+echo "Building Qt SVG..."
 rm -fr "qtsvg-everywhere-src-$QT"
 tar xf "qtsvg-everywhere-src-$QT.tar.xz"
 cd "qtsvg-everywhere-src-$QT"
@@ -309,7 +309,7 @@ make install
 cd ../..
 rm -fr "qtsvg-everywhere-src-$QT"
 
-echo "Installing Qt Image Formats..."
+echo "Building Qt Image Formats..."
 rm -fr "qtimageformats-everywhere-src-$QT"
 tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
 cd "qtimageformats-everywhere-src-$QT"
@@ -321,7 +321,7 @@ make install
 cd ../..
 rm -fr "qtimageformats-everywhere-src-$QT"
 
-echo "Installing Qt Tools..."
+echo "Building Qt Tools..."
 rm -fr "qttools-everywhere-src-$QT"
 tar xf "qttools-everywhere-src-$QT.tar.xz"
 cd "qttools-everywhere-src-$QT"
@@ -334,7 +334,7 @@ make install
 cd ../..
 rm -fr "qttools-everywhere-src-$QT"
 
-echo "Installing Qt Translations..."
+echo "Building Qt Translations..."
 rm -fr "qttranslations-everywhere-src-$QT"
 tar xf "qttranslations-everywhere-src-$QT.tar.xz"
 cd "qttranslations-everywhere-src-$QT"

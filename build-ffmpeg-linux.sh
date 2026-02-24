@@ -3,30 +3,30 @@
 set -e
 
 if [ "$#" -lt 1 ]; then
-    echo "Syntax: $0 <output director>"
-    exit 1
+  echo "Syntax: $0 <output director>"
+  exit 1
 fi
 
 for arg in "$@"; do
-	if [ "$arg" == "-skip-download" ]; then
-		echo "Not downloading sources."
-		SKIP_DOWNLOAD=true
-		shift
-	elif [ "$arg" == "-skip-cleanup" ]; then
-		echo "Not removing build directory."
-		SKIP_CLEANUP=true
-		shift
-	elif [ "$arg" == "" ]; then
-		# Eat empty args.
-		shift
-	fi
+  if [ "$arg" == "-skip-download" ]; then
+    echo "Not downloading sources."
+    SKIP_DOWNLOAD=true
+    shift
+  elif [ "$arg" == "-skip-cleanup" ]; then
+    echo "Not removing build directory."
+    SKIP_CLEANUP=true
+    shift
+  elif [ "$arg" == "" ]; then
+    # Eat empty args.
+    shift
+  fi
 done
 
 SCRIPTDIR=$(realpath $(dirname "${BASH_SOURCE[0]}"))
 NPROCS="$(getconf _NPROCESSORS_ONLN)"
 INSTALLDIR="$1"
 if [ "${INSTALLDIR:0:1}" != "/" ]; then
-	INSTALLDIR="$PWD/$INSTALLDIR"
+  INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 
 mkdir -p deps-build
@@ -94,62 +94,62 @@ FFMPEG_ENCODER_LIST=""\
 "xwd y41p yuv4 zlib zmbv"
 FFMPEG_ENCODERS=""
 for encoder in $FFMPEG_ENCODER_LIST; do
-	if [ -z "$FFMPEG_ENCODERS" ]; then
-		FFMPEG_ENCODERS="--enable-encoder=$encoder"
-	else
-		FFMPEG_ENCODERS="$FFMPEG_ENCODERS,$encoder"
-	fi
+  if [ -z "$FFMPEG_ENCODERS" ]; then
+    FFMPEG_ENCODERS="--enable-encoder=$encoder"
+  else
+    FFMPEG_ENCODERS="$FFMPEG_ENCODERS,$encoder"
+  fi
 done
 
 if [ "$SKIP_DOWNLOAD" != true ]; then
-	if [ ! -f "ffmpeg-$FFMPEG_VERSION.tar.xz" ]; then
-		curl -C - -L -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz"
-	fi
-	if [ ! -f "lame-$LAME.tar.gz" ]; then
-		curl -C - -L -o "lame-$LAME.tar.gz" "https://sourceforge.net/projects/lame/files/lame/$LAME/lame-$LAME.tar.gz/download"
-	fi
-	if [ ! -f "libvpx-$LIBVPX.tar.gz" ]; then
-		curl -C - -L -o "libvpx-$LIBVPX.tar.gz" "https://github.com/webmproject/libvpx/archive/refs/tags/v$LIBVPX.tar.gz"
-	fi
-	if [ ! -f "fdk-aac-stripped-$FDK_AAC.tar.gz" ]; then
-		curl -C - -L -o "fdk-aac-stripped-$FDK_AAC.tar.gz" "https://gitlab.freedesktop.org/wtaymans/fdk-aac-stripped/-/archive/$FDK_AAC/fdk-aac-stripped-$FDK_AAC.tar.gz"
-	fi
-	if [ ! -d "aom" ]; then
-		git clone https://aomedia.googlesource.com/aom
-		cd aom
-		git checkout "$LIBAOM"
-		cd ..
-	fi
-	if [ ! -f "libogg-$LIBOGG.tar.gz" ]; then
-		curl -C - -L -O "https://downloads.xiph.org/releases/ogg/libogg-$LIBOGG.tar.gz"
-	fi
-	if [ ! -f "libvorbis-$LIBVORBIS.tar.gz" ]; then
-		curl -C - -L -O "https://github.com/xiph/vorbis/releases/download/v$LIBVORBIS/libvorbis-$LIBVORBIS.tar.gz"
-	fi
-	if [ ! -f "libtheora-$LIBTHEORA.tar.bz2" ]; then
-		curl -C - -L -O "https://downloads.xiph.org/releases/theora/libtheora-$LIBTHEORA.tar.bz2"
-	fi
-	if [ ! -f "flac-$FLAC.tar.xz" ]; then
-		curl -C - -L -O "https://downloads.xiph.org/releases/flac/flac-$FLAC.tar.xz"
-	fi
-	if [ ! -f "speex-$SPEEX.tar.gz" ]; then
-		curl -C - -L -O "https://downloads.xiph.org/releases/speex/speex-$SPEEX.tar.gz"
-	fi
-	if [ ! -f "AMF-headers-v$AMF.tar.gz" ]; then
-		curl -C - -L -O "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v$AMF/AMF-headers-v$AMF.tar.gz"
-	fi
-	if [ ! -f "opus-$OPUS.tar.gz" ]; then
-		curl -C - -L -O "https://downloads.xiph.org/releases/opus/opus-$OPUS.tar.gz"
-	fi
-	if [ ! -f "SVT-AV1-$SVT_AV1.tar.gz" ]; then
-		curl -C - -L -O "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v$SVT_AV1/SVT-AV1-$SVT_AV1.tar.gz"
-	fi
-	if [ ! -f "glslang-$GLSLANG.tar.gz" ]; then
-		curl -C - -L -o "glslang-$GLSLANG.tar.gz" "https://github.com/KhronosGroup/glslang/archive/refs/tags/$GLSLANG.tar.gz"
-	fi
-	if [ ! -f "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" ]; then
-		curl -C - -L -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
-	fi
+  if [ ! -f "ffmpeg-$FFMPEG_VERSION.tar.xz" ]; then
+    curl -C - -L -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz"
+  fi
+  if [ ! -f "lame-$LAME.tar.gz" ]; then
+    curl -C - -L -o "lame-$LAME.tar.gz" "https://sourceforge.net/projects/lame/files/lame/$LAME/lame-$LAME.tar.gz/download"
+  fi
+  if [ ! -f "libvpx-$LIBVPX.tar.gz" ]; then
+    curl -C - -L -o "libvpx-$LIBVPX.tar.gz" "https://github.com/webmproject/libvpx/archive/refs/tags/v$LIBVPX.tar.gz"
+  fi
+  if [ ! -f "fdk-aac-stripped-$FDK_AAC.tar.gz" ]; then
+    curl -C - -L -o "fdk-aac-stripped-$FDK_AAC.tar.gz" "https://gitlab.freedesktop.org/wtaymans/fdk-aac-stripped/-/archive/$FDK_AAC/fdk-aac-stripped-$FDK_AAC.tar.gz"
+  fi
+  if [ ! -d "aom" ]; then
+    git clone https://aomedia.googlesource.com/aom
+    cd aom
+    git checkout "$LIBAOM"
+    cd ..
+  fi
+  if [ ! -f "libogg-$LIBOGG.tar.gz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/ogg/libogg-$LIBOGG.tar.gz"
+  fi
+  if [ ! -f "libvorbis-$LIBVORBIS.tar.gz" ]; then
+    curl -C - -L -O "https://github.com/xiph/vorbis/releases/download/v$LIBVORBIS/libvorbis-$LIBVORBIS.tar.gz"
+  fi
+  if [ ! -f "libtheora-$LIBTHEORA.tar.bz2" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/theora/libtheora-$LIBTHEORA.tar.bz2"
+  fi
+  if [ ! -f "flac-$FLAC.tar.xz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/flac/flac-$FLAC.tar.xz"
+  fi
+  if [ ! -f "speex-$SPEEX.tar.gz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/speex/speex-$SPEEX.tar.gz"
+  fi
+  if [ ! -f "AMF-headers-v$AMF.tar.gz" ]; then
+    curl -C - -L -O "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/releases/download/v$AMF/AMF-headers-v$AMF.tar.gz"
+  fi
+  if [ ! -f "opus-$OPUS.tar.gz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/opus/opus-$OPUS.tar.gz"
+  fi
+  if [ ! -f "SVT-AV1-$SVT_AV1.tar.gz" ]; then
+    curl -C - -L -O "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v$SVT_AV1/SVT-AV1-$SVT_AV1.tar.gz"
+  fi
+  if [ ! -f "glslang-$GLSLANG.tar.gz" ]; then
+    curl -C - -L -o "glslang-$GLSLANG.tar.gz" "https://github.com/KhronosGroup/glslang/archive/refs/tags/$GLSLANG.tar.gz"
+  fi
+  if [ ! -f "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" ]; then
+    curl -C - -L -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
+  fi
 fi
 
 cat > SHASUMS <<EOF
@@ -325,17 +325,17 @@ cd "ffmpeg-$FFMPEG_VERSION"
 mkdir build
 cd build
 ../configure --prefix="$INSTALLDIR" --disable-static --enable-shared \
-    --pkg-config-flags="--static" \
-    --extra-cflags="-I$DEPSINSTALLDIR/include" \
-    --extra-ldflags="-L$DEPSINSTALLDIR/lib" --extra-ldflags="-L$DEPSINSTALLDIR/lib64" \
-    --extra-ldsoflags="-Wl,-rpath,XORIGIN" \
-    --disable-all --disable-autodetect --enable-libmp3lame --enable-libvpx --enable-zlib --enable-libwebp \
-    --enable-libfdk-aac --enable-libaom --enable-libvorbis --enable-libtheora --enable-libspeex \
-    --enable-v4l2-m2m --enable-vaapi --enable-amf --enable-libopus --enable-libsvtav1 --enable-vulkan --enable-libglslang \
-    --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale \
-    --enable-muxer=avi,matroska,mov,mp3,mp4,wav \
-    --enable-protocol=file \
-    $FFMPEG_ENCODERS
+  --pkg-config-flags="--static" \
+  --extra-cflags="-I$DEPSINSTALLDIR/include" \
+  --extra-ldflags="-L$DEPSINSTALLDIR/lib" --extra-ldflags="-L$DEPSINSTALLDIR/lib64" \
+  --extra-ldsoflags="-Wl,-rpath,XORIGIN" \
+  --disable-all --disable-autodetect --enable-libmp3lame --enable-libvpx --enable-zlib --enable-libwebp \
+  --enable-libfdk-aac --enable-libaom --enable-libvorbis --enable-libtheora --enable-libspeex \
+  --enable-v4l2-m2m --enable-vaapi --enable-amf --enable-libopus --enable-libsvtav1 --enable-vulkan --enable-libglslang \
+  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale \
+  --enable-muxer=avi,matroska,mov,mp3,mp4,wav \
+  --enable-protocol=file \
+  $FFMPEG_ENCODERS
 
 make -j "$NPROCS"
 make install
@@ -350,7 +350,7 @@ find "$INSTALLDIR" -name 'libswscale.so' -exec patchelf --set-rpath '$ORIGIN' {}
 cd ../..
 
 if [ "$SKIP_CLEANUP" != true ]; then
-	echo "Cleaning up..."
-	cd ..
-	rm -fr deps-build
+  echo "Cleaning up..."
+  cd ..
+  rm -fr deps-build
 fi
