@@ -44,13 +44,13 @@ jobs:
 
   build-macos:
     name: "🍎 MacOS"
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 240
     steps:
     - uses: actions/checkout@v6
 
-    - name: Use Xcode 26
-      run: sudo xcode-select -s /Applications/Xcode_26.2.app
+    - name: Use Xcode 26.3
+      run: sudo xcode-select -s /Applications/Xcode_26.3.app
 
     - name: Build Dependencies
       run: ./build-dependencies-mac.sh macos-universal
