@@ -13,12 +13,50 @@ permissions:
   contents: write
 
 jobs:
+  build-sources:
+    name: "📝 Sources"
+    runs-on: ubuntu-22.04
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install Packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget zip
+
+    - name: Download Sources
+      run: ./download-sources.sh
+
+    - name: Create Archive
+      run: zip -r deps-sources.zip deps-build
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-sources
+        path: deps-sources.zip
+        compression-level: 0
+        if-no-files-found: error
+
   build-windows:
     name: "💻 Windows"
+    needs: build-sources
     runs-on: windows-2022
     timeout-minutes: 240
     steps:
     - uses: actions/checkout@v6
+
+    - name: Download Sources
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-sources
+        path: ./deps-sources
+
+    - name: Extract Sources
+      shell: cmd
+      run: |
+        "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
 
     - name: Build x64 Dependencies
       run: .\build-dependencies-windows-x64.bat -skip-cleanup
@@ -44,10 +82,20 @@ jobs:
 
   build-macos:
     name: "🍎 MacOS"
+    needs: build-sources
     runs-on: macos-26
     timeout-minutes: 240
     steps:
     - uses: actions/checkout@v6
+
+    - name: Download Sources
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-sources
+        path: ./deps-sources
+
+    - name: Extract Sources
+      run: unzip deps-sources/deps-sources.zip
 
     - name: Use Xcode 26.3
       run: sudo xcode-select -s /Applications/Xcode_26.3.app
@@ -68,10 +116,20 @@ jobs:
 
   build-linux-x64:
     name: "🐧 Linux x64"
+    needs: build-sources
     runs-on: ubuntu-22.04
     timeout-minutes: 240
     steps:
     - uses: actions/checkout@v6
+
+    - name: Download Sources
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-sources
+        path: ./deps-sources
+
+    - name: Extract Sources
+      run: unzip deps-sources/deps-sources.zip
 
     - name: Install Packages
       run: ./install-packages-linux.sh
@@ -95,7 +153,7 @@ jobs:
 
   build-linux-cross:
     name: "🐧 Linux ${{ matrix.arch }}"
-    needs: build-linux-x64
+    needs: [build-sources, build-linux-x64]
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/duckstation/cross-build-${{ matrix.arch }}:latest
@@ -106,6 +164,15 @@ jobs:
         arch: ["arm64", "armhf"]
     steps:
     - uses: actions/checkout@v6
+
+    - name: Download Sources
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-sources
+        path: ./deps-sources
+
+    - name: Extract Sources
+      run: unzip deps-sources/deps-sources.zip
 
     - name: Download x64 Artifact
       uses: actions/download-artifact@v6
@@ -129,32 +196,6 @@ jobs:
       with:
         name: deps-linux-cross-${{ matrix.arch }}
         path: deps-linux-cross-${{ matrix.arch }}.tar.xz
-        compression-level: 0
-        if-no-files-found: error
-
-  build-sources:
-    name: "📝 Sources"
-    runs-on: ubuntu-22.04
-    timeout-minutes: 240
-    steps:
-    - uses: actions/checkout@v6
-
-    - name: Install Packages
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y wget zip
-
-    - name: Download Sources
-      run: ./download-sources.sh
-
-    - name: Create Archive
-      run: zip -r deps-sources.zip deps-build
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v6
-      with:
-        name: deps-sources
-        path: deps-sources.zip
         compression-level: 0
         if-no-files-found: error
 
