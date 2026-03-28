@@ -1,17 +1,17 @@
 --- a/src/linguist/CMakeLists.txt
 +++ b/src/linguist/CMakeLists.txt
-@@ -16,7 +16,7 @@ add_subdirectory(lupdate)
- add_subdirectory(lupdate-pro)
+@@ -22,7 +22,7 @@ add_subdirectory(lupdate-pro)
+ add_subdirectory(ltext2id)
  if(QT_FEATURE_process AND QT_FEATURE_pushbutton AND QT_FEATURE_toolbutton
      AND QT_FEATURE_png AND QT_FEATURE_mdiarea AND QT_FEATURE_syntaxhighlighter
 -    AND TARGET Qt::Widgets AND TARGET Qt::Quick)
-+    AND TARGET Qt::Widgets)
++    AND TARGET Qt::Network AND TARGET Qt::Widgets)
      add_subdirectory(linguist)
  endif()
  
 --- a/src/linguist/linguist/CMakeLists.txt
 +++ b/src/linguist/linguist/CMakeLists.txt
-@@ -22,7 +22,6 @@ qt_internal_add_app(linguist
+@@ -44,7 +44,6 @@ qt_internal_add_app(linguist
          errorsview.cpp errorsview.h
          finddialog.cpp finddialog.h finddialog.ui
          uiformpreviewview.cpp uiformpreviewview.h
@@ -19,73 +19,29 @@
          globals.cpp globals.h
          main.cpp
          mainwindow.cpp mainwindow.h mainwindow.ui
-@@ -53,8 +52,6 @@ qt_internal_add_app(linguist
+@@ -77,10 +76,9 @@ qt_internal_add_app(linguist
+         Qt::CorePrivate
+         Qt::Gui
          Qt::GuiPrivate
++        Qt::Network
          Qt::UiToolsPrivate
          Qt::Widgets
 -        Qt::QuickWidgets
 -        Qt::QuickLayouts
  )
  
- qt_internal_extend_target(linguist CONDITION QT_FEATURE_printsupport
-@@ -66,46 +63,6 @@ qt_internal_extend_target(linguist CONDITION QT_FEATURE_printsupport
- 
- set(available_plugins "")
- 
--set(plugin_targets
--    Qt::qtquickcontrols2plugin
--    Qt::qtquick2plugin
--    Qt::qtquickdialogsplugin
--    Qt::qtquickcontrols2universalstyleplugin
--    Qt::qtquickcontrols2basicstyleplugin
--    Qt::qtquickcontrols2fluentwinui3styleplugin
--    Qt::qtquickcontrols2fusionstyleplugin
--    Qt::qtquickcontrols2imaginestyleplugin
--    Qt::qtquickcontrols2iosstyleplugin
--    Qt::qtquickcontrols2macosstyleplugin
--    Qt::qtquickcontrols2materialstyleplugin
--    Qt::qtquicktemplates2plugin
--    Qt::qtquickcontrols2implplugin
--    Qt::qtquickdialogs2quickimplplugin
--    Qt::qtquickcontrols2universalstyleimplplugin
--    Qt::qtquickcontrols2basicstyleimplplugin
--    Qt::qtquickcontrols2fluentwinui3styleimplplugin
--    Qt::qtquickcontrols2fusionstyleimplplugin
--    Qt::qtquickcontrols2imaginestyleimplplugin
--    Qt::qtquickcontrols2iosstyleimplplugin
--    Qt::qtquickcontrols2macosstyleimplplugin
--    Qt::qtquickcontrols2materialstyleimplplugin
--    Qt::quickwindow
--)
--
--foreach(plugin ${plugin_targets})
--    if(TARGET ${plugin})
--        list(APPEND available_plugins ${plugin})
--    endif()
--endforeach()
--
--if (available_plugins)
--    if(BUILD_SHARED_LIBS)
--        add_dependencies(linguist ${available_plugins})
--    else()
--        qt_internal_extend_target(linguist LIBRARIES ${available_plugins})
--    endif()
--endif()
--
- qt_add_ui(linguist
-     SOURCES
-         batchtranslation.ui
+ qt_internal_extend_target(linguist CONDITION QT_FEATURE_process
 --- a/src/linguist/linguist/mainwindow.cpp
 +++ b/src/linguist/linguist/mainwindow.cpp
-@@ -12,7 +12,6 @@
- #include "errorsview.h"
+@@ -14,7 +14,6 @@
  #include "finddialog.h"
+ #include <helpclient.h>
  #include "uiformpreviewview.h"
 -#include "qmlformpreviewview.h"
  #include "globals.h"
  #include "messageeditor.h"
  #include "messagemodel.h"
-@@ -79,11 +78,6 @@ static bool hasUiFormPreview(const QString &fileName)
+@@ -72,11 +71,6 @@ static bool hasUiFormPreview(const QString &fileName)
      return fileName.endsWith(".ui"_L1) || fileName.endsWith(".jui"_L1);
  }
  
@@ -94,10 +50,10 @@
 -    return fileName.endsWith(QLatin1String(".qml")) && qmlPreviewChecked;
 -}
 -
- static QString leadingWhitespace(const QString &str)
- {
-     int i = 0;
-@@ -491,11 +485,9 @@ MainWindow::MainWindow()
+ static const int MessageMS = 2500;
+ 
+ } // namespace
+@@ -352,11 +346,9 @@ MainWindow::MainWindow(HelpClientType helpClientType)
      m_sourceAndFormView = new QStackedWidget(this);
      m_sourceAndFormDock->setWidget(m_sourceAndFormView);
      m_uiFormPreviewView = new UiFormPreviewView(0, m_dataModel);
@@ -109,15 +65,15 @@
  
      // Set up errors dock widget
      m_errorsDock = new QDockWidget(this);
-@@ -693,7 +685,6 @@ void MainWindow::modelCountChanged()
+@@ -565,7 +557,6 @@ void MainWindow::modelCountChanged()
      m_ui.actionFindPrev->setEnabled(false);
  
      m_uiFormPreviewView->setSourceContext(-1, 0);
 -    m_qmlFormPreviewView->setSourceContext(-1, 0);
+     updateVisibleColumns();
  }
  
- struct OpenedFile {
-@@ -1673,9 +1664,6 @@ void MainWindow::translationChanged(const MultiDataIndex &index)
+@@ -1606,9 +1597,6 @@ void MainWindow::translationChanged(const MultiDataIndex &index)
      MessageItem *m = m_dataModel->messageItem(index);
      if (hasUiFormPreview(m->fileName()))
          m_uiFormPreviewView->setSourceContext(index.model(), m);
@@ -127,7 +83,7 @@
  }
  
  // This and the following function operate directly on the messageitem,
-@@ -1691,10 +1679,6 @@ void MainWindow::updateTranslation(const QStringList &translations)
+@@ -1624,10 +1612,6 @@ void MainWindow::updateTranslation(const QStringList &translations)
      m->setTranslations(translations);
      if (!m->fileName().isEmpty() && hasUiFormPreview(m->fileName()))
          m_uiFormPreviewView->setSourceContext(m_currentIndex.model(), m);
@@ -138,7 +94,7 @@
      updateDanger(m_currentIndex, true);
  
      if (m->isFinished())
-@@ -2099,7 +2083,6 @@ void MainWindow::setupMenuBar()
+@@ -2056,7 +2040,6 @@ void MainWindow::setupMenuBar()
      connect(m_ui.actionDisplayGuesses, &QAction::triggered,
              m_phraseView, &PhraseView::toggleGuessing);
      connect(m_ui.actionStatistics, &QAction::triggered, this, &MainWindow::showStatistics);
@@ -146,7 +102,7 @@
      connect(m_ui.actionVisualizeWhitespace, &QAction::triggered,
              this, &MainWindow::toggleVisualizeWhitespace);
      connect(m_ui.actionIncreaseZoom, &QAction::triggered,
-@@ -2209,11 +2192,7 @@ void MainWindow::updateSourceView(int model, MessageItem *item)
+@@ -2166,11 +2149,7 @@ void MainWindow::updateSourceView(int model, MessageItem *item)
          if (hasUiFormPreview(item->fileName())) {
              m_sourceAndFormView->setCurrentWidget(m_uiFormPreviewView);
              m_uiFormPreviewView->setSourceContext(model, item);
@@ -158,7 +114,7 @@
              m_sourceAndFormView->setCurrentWidget(m_sourceCodeView);
              QDir dir = QFileInfo(m_dataModel->srcFileName(model)).dir();
              QString fileName = QDir::cleanPath(dir.absoluteFilePath(item->fileName()));
-@@ -2754,14 +2733,6 @@ void MainWindow::showStatistics()
+@@ -2774,14 +2753,6 @@ void MainWindow::showStatistics()
      updateStatistics();
  }
  
@@ -175,15 +131,15 @@
      m_messageEditor->setVisualizeWhitespace(m_ui.actionVisualizeWhitespace->isChecked());
 --- a/src/linguist/linguist/mainwindow.h
 +++ b/src/linguist/linguist/mainwindow.h
-@@ -37,7 +37,6 @@ class BatchTranslationDialog;
- class ErrorsView;
+@@ -37,7 +37,6 @@ class ErrorsView;
  class FocusWatcher;
+ class HelpClient;
  class UiFormPreviewView;
 -class QmlFormPreviewView;
  class MessageEditor;
  class PhraseView;
  class SourceCodeView;
-@@ -130,7 +129,6 @@ private slots:
+@@ -139,7 +138,6 @@ private slots:
                    FindDialog::FindOptions options, int statusFilter);
      void revalidate();
      void showStatistics();
@@ -191,8 +147,8 @@
      void toggleVisualizeWhitespace();
      void onWhatsThis();
      void updatePhraseDicts();
-@@ -196,7 +194,6 @@ private:
-     QStackedWidget *m_sourceAndFormView;
+@@ -215,7 +213,6 @@ private:
+     QTabWidget *m_contextAndLabelView;
      SourceCodeView *m_sourceCodeView;
      UiFormPreviewView *m_uiFormPreviewView;
 -    QmlFormPreviewView *m_qmlFormPreviewView;
@@ -201,7 +157,7 @@
      QLabel *m_modifiedLabel;
 --- a/src/linguist/linguist/mainwindow.ui
 +++ b/src/linguist/linguist/mainwindow.ui
-@@ -97,7 +97,6 @@
+@@ -98,7 +98,6 @@
      </widget>
      <addaction name="actionResetSorting"/>
      <addaction name="actionDisplayGuesses"/>
@@ -209,8 +165,8 @@
      <addaction name="actionLengthVariants"/>
      <addaction name="actionVisualizeWhitespace"/>
      <addaction name="separator"/>
-@@ -646,26 +645,6 @@
-     <enum>QAction::NoRole</enum>
+@@ -649,26 +648,6 @@
+     <enum>QAction::MenuRole::NoRole</enum>
     </property>
    </action>
 -  <action name="actionQmlPreview">
@@ -230,7 +186,7 @@
 -    <string/>
 -   </property>
 -   <property name="menuRole">
--    <enum>QAction::NoRole</enum>
+-    <enum>QAction::MenuRole::NoRole</enum>
 -   </property>
 -  </action>
    <action name="actionManual">
