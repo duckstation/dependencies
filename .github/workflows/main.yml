@@ -59,10 +59,10 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
 
     - name: Build x64 Dependencies
-      run: .\build-dependencies-windows-x64.bat -skip-cleanup
+      run: .\build-dependencies-windows-x64.bat -skip-download -skip-cleanup
 
     - name: Build ARM64 Dependencies
-      run: .\build-dependencies-windows-arm64.bat -skip-cleanup
+      run: .\build-dependencies-windows-arm64.bat -skip-download -skip-cleanup
 
     - name: Create Archives
       shell: cmd
@@ -101,7 +101,7 @@ jobs:
       run: sudo xcode-select -s /Applications/Xcode_26.3.app
 
     - name: Build Dependencies
-      run: ./build-dependencies-mac.sh macos-universal
+      run: ./build-dependencies-mac.sh -skip-download macos-universal
 
     - name: Create Archive
       run: tar -cJf deps-macos-universal.tar.xz macos-universal
@@ -135,7 +135,7 @@ jobs:
       run: ./install-packages-linux.sh
 
     - name: Build Dependencies
-      run: ./build-dependencies-linux.sh linux-x64
+      run: ./build-dependencies-linux.sh -skip-download linux-x64
 
     - name: Build FFmpeg
       run: ./build-ffmpeg-linux.sh linux-x64
@@ -186,7 +186,7 @@ jobs:
 
     - name: Build Dependencies
       run: |
-        ./build-dependencies-linux-cross.sh "linux-x64" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "linux-cross-${{matrix.arch}}"
+        ./build-dependencies-linux-cross.sh -skip-download "linux-x64" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "linux-cross-${{matrix.arch}}"
 
     - name: Create Archive
       run: tar -cJf "deps-linux-cross-${{ matrix.arch }}.tar.xz" "linux-cross-${{matrix.arch}}"
