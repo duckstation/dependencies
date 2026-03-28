@@ -38,7 +38,8 @@ curl -C - -L \
   -o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
   -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
   -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
-  -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
+  -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz" \
+  -o "dxcompiler-$DXCOMPILER_VERSION.zip" "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.DXC/$DXCOMPILER_VERSION"
 
 cat > SHASUMS <<EOF
 $BROTLI_GZ_HASH  brotli-$BROTLI.tar.gz
@@ -71,6 +72,7 @@ $DISCORD_RPC_GZ_HASH  discord-rpc-$DISCORD_RPC_COMMIT.tar.gz
 $PLUTOSVG_GZ_HASH  plutosvg-$PLUTOSVG_COMMIT.tar.gz
 $SHADERC_GZ_HASH  shaderc-$SHADERC_COMMIT.tar.gz
 $SOUNDTOUCH_GZ_HASH  soundtouch-$SOUNDTOUCH_COMMIT.tar.gz
+$DXCOMPILER_ZIP_HASH  dxcompiler-$DXCOMPILER_VERSION.zip
 EOF
 
 shasum -a 256 --check SHASUMS
