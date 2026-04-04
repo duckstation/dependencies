@@ -1,6 +1,6 @@
---- qtbase/src/widgets/styles/qfusionstyle.cpp	2025-09-03 17:32:08
-+++ qtbase/src/widgets/styles/qfusionstyle.cpp	2025-09-03 17:56:20
-@@ -588,11 +588,12 @@
+--- qtbase/src/widgets/styles/qfusionstyle.cpp	2026-03-05 17:51:49.000000000 +1000
++++ qtbase/src/widgets/styles/qfusionstyle.cpp	2026-04-04 16:31:00.149052898 +1000
+@@ -589,11 +589,12 @@
  
              painter->setBrush((state & State_Sunken) ? QBrush(pressedColor) : gradient);
  

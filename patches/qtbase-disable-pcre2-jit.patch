@@ -1,6 +1,6 @@
---- qtbase/src/3rdparty/pcre2/CMakeLists.txt	2024-03-19 08:46:43.000000000 -0700
-+++ qtbase/src/3rdparty/pcre2/CMakeLists.txt	2024-06-06 21:52:20.539619500 -0700
-@@ -41,6 +41,7 @@
+--- qtbase/src/3rdparty/pcre2/CMakeLists.txt	2026-03-05 17:51:49.000000000 +1000
++++ qtbase/src/3rdparty/pcre2/CMakeLists.txt	2026-04-04 16:30:55.996748110 +1000
+@@ -45,6 +45,7 @@
          src/pcre2_xclass.c
      DEFINES
          HAVE_CONFIG_H
@@ -8,7 +8,7 @@
      PUBLIC_DEFINES
          PCRE2_CODE_UNIT_WIDTH=16
      PUBLIC_INCLUDE_DIRECTORIES
-@@ -52,23 +53,8 @@
+@@ -56,23 +57,8 @@
  ## Scopes:
  #####################################################################
  

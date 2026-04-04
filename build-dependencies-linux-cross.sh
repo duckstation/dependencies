@@ -191,7 +191,7 @@ echo "Building libpng..."
 rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
 cd "libpng-$LIBPNG"
-patch -p1 < "$SCRIPTDIR/patches/libpng-1.6.54-apng.patch"
+patch -p1 < "$SCRIPTDIR/patches/libpng-1.6.56-apng.patch"
 cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build -G Ninja
 cmake --build build --parallel
 ninja -C build install
