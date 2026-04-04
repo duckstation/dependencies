@@ -240,7 +240,6 @@ echo "Building Qt Base..."
 rm -fr "qtbase-everywhere-src-$QT"
 tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
-patch -p1 < "$SCRIPTDIR/patches/qtbase-disable-pcre2-jit.patch"
 patch -p1 < "$SCRIPTDIR/patches/qtbase-fusion-style.patch"
 mkdir build
 cd build

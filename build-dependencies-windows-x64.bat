@@ -211,9 +211,6 @@ rmdir /S /Q "qtbase-everywhere-src-%QT%"
 %SEVENZIP% x "qtbase-everywhere-src-%QT%.zip" || goto error
 cd "qtbase-everywhere-src-%QT%" || goto error
 
-rem Disable the PCRE2 JIT, it doesn't properly verify AVX2 support.
-%PATCH% -p1 < "%SCRIPTDIR%\patches\qtbase-disable-pcre2-jit.patch" || goto error
-
 rem Stop checkboxes in Fusion theme having such bright outlines.
 %PATCH% -p1 < "%SCRIPTDIR%\patches\qtbase-fusion-style.patch" || goto error
 
