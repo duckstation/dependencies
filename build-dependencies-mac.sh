@@ -90,7 +90,9 @@ $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz
 $MOLTENVK_GZ_HASH  v$MOLTENVK_VERSION.tar.gz
 $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
+$QTDECLARATIVE_XZ_HASH  qtdeclarative-everywhere-src-$QT.tar.xz
 $QTIMAGEFORMATS_XZ_HASH  qtimageformats-everywhere-src-$QT.tar.xz
+$QTSHADERTOOLS_XZ_HASH  qtshadertools-everywhere-src-$QT.tar.xz
 $QTSVG_XZ_HASH  qtsvg-everywhere-src-$QT.tar.xz
 $QTTOOLS_XZ_HASH  qttools-everywhere-src-$QT.tar.xz
 $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz
@@ -116,7 +118,9 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "brotli-$BROTLI.tar.gz" ]]; then
       -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" \
       -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
+      -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtdeclarative-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
+      -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtshadertools-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
@@ -359,11 +363,34 @@ make install
 cd ../..
 rm -fr "qtimageformats-everywhere-src-$QT"
 
+echo "Installing Qt Shader Tools..."
+rm -fr "qtshadertools-everywhere-src-$QT"
+tar xf "qtshadertools-everywhere-src-$QT.tar.xz"
+cd "qtshadertools-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}"
+make "-j$NPROCS"
+make install
+cd ../..
+rm -fr "qtshadertools-everywhere-src-$QT"
+
+echo "Installing Qt Declarative..."
+rm -fr "qtdeclarative-everywhere-src-$QT"
+tar xf "qtdeclarative-everywhere-src-$QT.tar.xz"
+cd "qtdeclarative-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}"
+make "-j$NPROCS"
+make install
+cd ../..
+rm -fr "qtdeclarative-everywhere-src-$QT"
+
 echo "Building Qt Tools..."
 rm -fr "qttools-everywhere-src-$QT"
 tar xf "qttools-everywhere-src-$QT.tar.xz"
 cd "qttools-everywhere-src-$QT"
-patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
 mkdir build
 cd build
 "$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_linguist=ON -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF

@@ -23,8 +23,12 @@ curl -C - -L \
   -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.zip" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtdeclarative-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtdeclarative-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.zip" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtshadertools-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtshadertools-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
@@ -57,8 +61,12 @@ $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz
 $MOLTENVK_GZ_HASH  v$MOLTENVK_VERSION.tar.gz
 $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
 $QTBASE_ZIP_HASH  qtbase-everywhere-src-$QT.zip
+$QTDECLARATIVE_XZ_HASH  qtdeclarative-everywhere-src-$QT.tar.xz
+$QTDECLARATIVE_ZIP_HASH  qtdeclarative-everywhere-src-$QT.zip
 $QTIMAGEFORMATS_XZ_HASH  qtimageformats-everywhere-src-$QT.tar.xz
 $QTIMAGEFORMATS_ZIP_HASH  qtimageformats-everywhere-src-$QT.zip
+$QTSHADERTOOLS_XZ_HASH  qtshadertools-everywhere-src-$QT.tar.xz
+$QTSHADERTOOLS_ZIP_HASH  qtshadertools-everywhere-src-$QT.zip
 $QTSVG_XZ_HASH  qtsvg-everywhere-src-$QT.tar.xz
 $QTSVG_ZIP_HASH  qtsvg-everywhere-src-$QT.zip
 $QTTOOLS_XZ_HASH  qttools-everywhere-src-$QT.tar.xz
