@@ -179,11 +179,34 @@ ninja install
 cd ../../
 rm -fr "qtwayland-everywhere-src-$QT"
 
+echo "Building Qt Shader Tools..."
+rm -fr "qtshadertools-everywhere-src-$QT"
+tar xf "qtshadertools-everywhere-src-$QT.tar.xz"
+cd "qtshadertools-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}"
+cmake --build . --parallel
+ninja install
+cd ../../
+rm -fr "qtshadertools-everywhere-src-$QT"
+
+echo "Building Qt Declarative..."
+rm -fr "qtdeclarative-everywhere-src-$QT"
+tar xf "qtdeclarative-everywhere-src-$QT.tar.xz"
+cd "qtdeclarative-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}" -DFEATURE_wayland_server=OFF
+cmake --build . --parallel
+ninja install
+cd ../../
+rm -fr "qtdeclarative-everywhere-src-$QT"
+
 echo "Installing Qt Tools..."
 rm -fr "qttools-everywhere-src-$QT"
 tar xf "qttools-everywhere-src-$QT.tar.xz"
 cd "qttools-everywhere-src-$QT"
-patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
 patch -p1 < "$SCRIPTDIR/patches/qttools-disable-clang.patch"
 mkdir build
 cd build
