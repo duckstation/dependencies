@@ -79,7 +79,9 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz
     -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
     -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtdeclarative-everywhere-src-$QT.tar.xz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
+    -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtshadertools-everywhere-src-$QT.tar.xz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtwayland-everywhere-src-$QT.tar.xz"  \
@@ -104,7 +106,9 @@ $SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
 $ZLIBNG_GZ_HASH  zlib-ng-$ZLIBNG.tar.gz
 $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
+$QTDECLARATIVE_XZ_HASH  qtdeclarative-everywhere-src-$QT.tar.xz
 $QTIMAGEFORMATS_XZ_HASH  qtimageformats-everywhere-src-$QT.tar.xz
+$QTSHADERTOOLS_XZ_HASH  qtshadertools-everywhere-src-$QT.tar.xz
 $QTTOOLS_XZ_HASH  qttools-everywhere-src-$QT.tar.xz
 $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz
 $QTWAYLAND_XZ_HASH  qtwayland-everywhere-src-$QT.tar.xz
@@ -343,11 +347,34 @@ ninja install
 cd ../../
 rm -fr "qtwayland-everywhere-src-$QT"
 
+echo "Building Qt Shader Tools..."
+rm -fr "qtshadertools-everywhere-src-$QT"
+tar xf "qtshadertools-everywhere-src-$QT.tar.xz"
+cd "qtshadertools-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DQT_GENERATE_SBOM=OFF
+cmake --build . --parallel
+ninja install
+cd ../../
+rm -fr "qtshadertools-everywhere-src-$QT"
+
+echo "Building Qt Declarative..."
+rm -fr "qtdeclarative-everywhere-src-$QT"
+tar xf "qtdeclarative-everywhere-src-$QT.tar.xz"
+cd "qtdeclarative-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DQT_GENERATE_SBOM=OFF -DFEATURE_wayland_server=OFF
+cmake --build . --parallel
+ninja install
+cd ../../
+rm -fr "qtdeclarative-everywhere-src-$QT"
+
 echo "Installing Qt Tools..."
 rm -fr "qttools-everywhere-src-$QT"
 tar xf "qttools-everywhere-src-$QT.tar.xz"
 cd "qttools-everywhere-src-$QT"
-patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
 patch -p1 < "$SCRIPTDIR/patches/qttools-disable-clang.patch"
 mkdir build
 cd build

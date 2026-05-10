@@ -65,7 +65,9 @@ call :downloadfile "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "https://github.com/lib
 call :downloadfile "SDL3-%SDL3%.zip" "https://github.com/libsdl-org/SDL/releases/download/release-%SDL3%/SDL3-%SDL3%.zip" "%SDL3_ZIP_HASH%" || goto error
 call :downloadfile "sqlite-amalgamation-%SQLITE%.zip" "https://sqlite.org/2026/sqlite-amalgamation-%SQLITE%.zip" "%SQLITE_ZIP_HASH%" || goto error
 call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
+call :downloadfile "qtdeclarative-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtdeclarative-everywhere-src-%QT%.zip" "%QTDECLARATIVE_ZIP_HASH%" || goto error
 call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
+call :downloadfile "qtshadertools-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtshadertools-everywhere-src-%QT%.zip" "%QTSHADERTOOLS_ZIP_HASH%" || goto error
 call :downloadfile "qttools-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttools-everywhere-src-%QT%.zip" "%QTTOOLS_ZIP_HASH%" || goto error
 call :downloadfile "qttranslations-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttranslations-everywhere-src-%QT%.zip" "%QTTRANSLATIONS_ZIP_HASH%" || goto error
 call :downloadfile "libwebp-%LIBWEBP%.tar.gz" "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%LIBWEBP%.tar.gz" "%LIBWEBP_GZ_HASH%" || goto error
@@ -244,11 +246,41 @@ ninja install || goto error
 cd ..\.. || goto error
 rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
 
+echo Building Qt Shader Tools...
+rmdir /S /Q "qtshadertools-everywhere-src-%QT%"
+%SEVENZIP% x "qtshadertools-everywhere-src-%QT%.zip" || goto error
+cd "qtshadertools-everywhere-src-%QT%" || goto error
+mkdir build || goto error
+cd build || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=OFF || goto error
+cmake --build . --parallel || goto error
+ninja install || goto error
+cd ..\.. || goto error
+rmdir /S /Q "qtshadertools-everywhere-src-%QT%"
+
+rem This mess with the junction is to work around path length limits in cmake/MSVC.
+echo Building Qt Declarative...
+rmdir /S /Q "qtdeclarative-everywhere-src-%QT%"
+%SEVENZIP% x "qtdeclarative-everywhere-src-%QT%.zip" || goto error
+cd "qtdeclarative-everywhere-src-%QT%" || goto error
+set QTDECLARATIVEDIR=%CD%
+mkdir build || goto error
+pushd ..\..\..\.. || goto error
+mklink /J b "%QTDECLARATIVEDIR%\build" || goto error
+cd b || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" %QTDECLARATIVEDIR% -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=OFF || goto error
+cmake --build . --parallel || goto error
+ninja install || goto error
+cd .. || goto error
+rmdir b || goto error
+popd || goto error
+cd .. || goto error
+rmdir /S /Q "qtdeclarative-everywhere-src-%QT%"
+
 echo Building Qt Tools...
 rmdir /S /Q "qttools-everywhere-src-%QT%"
 %SEVENZIP% x "qttools-everywhere-src-%QT%.zip" || goto error
 cd "qttools-everywhere-src-%QT%" || goto error
-%PATCH% -p1 < "%SCRIPTDIR%\patches\qttools-linguist-without-quick.patch" || goto error
 mkdir build || goto error
 cd build || goto error
 call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=OFF -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF || goto error
