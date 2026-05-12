@@ -61,6 +61,7 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "brotli-$BROTLI.tar.gz" ]]; then
     -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
     -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
     -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
+    -O "https://sqlite.org/2026/sqlite-amalgamation-$SQLITE.zip" \
     -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
     -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
     -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
@@ -77,6 +78,7 @@ $LIBJPEGTURBO_GZ_HASH  libjpeg-turbo-$LIBJPEGTURBO.tar.gz
 $LIBPNG_GZ_HASH  libpng-$LIBPNG.tar.gz
 $LIBWEBP_GZ_HASH  libwebp-$LIBWEBP.tar.gz
 $LIBZIP_GZ_HASH  libzip-$LIBZIP.tar.gz
+$SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
 $ZLIBNG_GZ_HASH  zlib-ng-$ZLIBNG.tar.gz
 $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $CPUINFO_GZ_HASH  cpuinfo-$CPUINFO_COMMIT.tar.gz
@@ -201,6 +203,18 @@ cmake --build build --parallel
 ninja -C build install
 cd ..
 rm -fr "harfbuzz-$HARFBUZZ"
+
+echo "Building sqlite..."
+rm -fr "sqlite-amalgamation-$SQLITE"
+unzip "sqlite-amalgamation-$SQLITE.zip"
+cd "sqlite-amalgamation-$SQLITE"
+patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
+sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
+cmake "${CMAKE_COMMON[@]}" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DBUILD_SHELL=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "sqlite-amalgamation-$SQLITE"
 
 echo "Building shaderc..."
 rm -fr "shaderc-$SHADERC_COMMIT"

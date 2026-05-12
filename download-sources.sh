@@ -16,6 +16,7 @@ curl -C - -L \
   -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
   -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
   -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
+  -O "https://sqlite.org/2026/sqlite-amalgamation-$SQLITE.zip" \
   -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
   -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
   -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" \
@@ -49,6 +50,7 @@ $LIBJPEGTURBO_GZ_HASH  libjpeg-turbo-$LIBJPEGTURBO.tar.gz
 $LIBPNG_GZ_HASH  libpng-$LIBPNG.tar.gz
 $LIBWEBP_GZ_HASH  libwebp-$LIBWEBP.tar.gz
 $LIBZIP_GZ_HASH  libzip-$LIBZIP.tar.gz
+$SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
 $ZLIBNG_GZ_HASH  zlib-ng-$ZLIBNG.tar.gz
 $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz

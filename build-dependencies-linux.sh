@@ -44,6 +44,7 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz
     -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
     -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
     -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
+    -O "https://sqlite.org/2026/sqlite-amalgamation-$SQLITE.zip" \
     -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
     -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
     -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
@@ -69,6 +70,7 @@ $LIBJPEGTURBO_GZ_HASH  libjpeg-turbo-$LIBJPEGTURBO.tar.gz
 $LIBPNG_GZ_HASH  libpng-$LIBPNG.tar.gz
 $LIBWEBP_GZ_HASH  libwebp-$LIBWEBP.tar.gz
 $LIBZIP_GZ_HASH  libzip-$LIBZIP.tar.gz
+$SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
 $ZLIBNG_GZ_HASH  zlib-ng-$ZLIBNG.tar.gz
 $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
@@ -229,6 +231,18 @@ cmake --build build --parallel
 ninja -C build install
 cd ..
 rm -fr "SDL3-$SDL3"
+
+echo "Building sqlite..."
+rm -fr "sqlite-amalgamation-$SQLITE"
+unzip "sqlite-amalgamation-$SQLITE.zip"
+cd "sqlite-amalgamation-$SQLITE"
+patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
+sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_PREFIX="$INSTALLDIR" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "sqlite-amalgamation-$SQLITE"
 
 # Couple notes:
 # -fontconfig is needed otherwise Qt Widgets render only boxes.

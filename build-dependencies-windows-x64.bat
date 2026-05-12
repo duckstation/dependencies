@@ -63,6 +63,7 @@ call :downloadfile "harfbuzz-%HARFBUZZ%.tar.gz" "https://github.com/harfbuzz/har
 call :downloadfile "libpng-%LIBPNG%.tar.gz" "https://download.sourceforge.net/libpng/libpng-%LIBPNG%.tar.gz" "%LIBPNG_GZ_HASH%" || goto error
 call :downloadfile "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%LIBJPEGTURBO%/libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "%LIBJPEGTURBO_GZ_HASH%" || goto error
 call :downloadfile "SDL3-%SDL3%.zip" "https://github.com/libsdl-org/SDL/releases/download/release-%SDL3%/SDL3-%SDL3%.zip" "%SDL3_ZIP_HASH%" || goto error
+call :downloadfile "sqlite-amalgamation-%SQLITE%.zip" "https://sqlite.org/2026/sqlite-amalgamation-%SQLITE%.zip" "%SQLITE_ZIP_HASH%" || goto error
 call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
 call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
 call :downloadfile "qtsvg-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtsvg-everywhere-src-%QT%.zip" "%QTSVG_ZIP_HASH%" || goto error
@@ -199,6 +200,18 @@ ninja -C build install || goto error
 copy build\SDL3.pdb "%INSTALLDIR%\bin" || goto error
 cd .. || goto error
 rmdir /S /Q "SDL3-%SDL3%"
+
+echo Building SQLite...
+rmdir /S /Q "sqlite-amalgamation-%SQLITE%"
+%SEVENZIP% x "sqlite-amalgamation-%SQLITE%.zip" || goto error
+cd "sqlite-amalgamation-%SQLITE%" || goto error
+%PATCH% -p1 < "%SCRIPTDIR%\patches\sqlite-cmake.patch" || goto error
+powershell -Command "(Get-Content CMakeLists.txt) -replace '@@SQLITE_LONG_VERSION@@', '%SQLITE_LONG_VERSION%' | Set-Content CMakeLists.txt" || goto error
+cmake -B build -DCMAKE_BUILD_TYPE=Release %FORCEPDB% -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -G Ninja || goto error
+cmake --build build --parallel || goto error
+ninja -C build install || goto error
+cd .. || goto error
+rmdir /S /Q "sqlite-amalgamation-%SQLITE%"
 
 if %DEBUG%==1 (
   set QTBUILDSPEC=-DCMAKE_CONFIGURATION_TYPES="Release;Debug" -G "Ninja Multi-Config"
