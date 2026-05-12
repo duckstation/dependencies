@@ -198,6 +198,7 @@ echo "Building HarfBuzz..."
 rm -fr "harfbuzz-$HARFBUZZ"
 tar xf "harfbuzz-$HARFBUZZ.tar.gz"
 cd "harfbuzz-$HARFBUZZ"
+patch -p1 < "$SCRIPTDIR/patches/harfbuzz-14.2.0-fix-cmake.patch"
 cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build -G Ninja
 cmake --build build --parallel
 ninja -C build install

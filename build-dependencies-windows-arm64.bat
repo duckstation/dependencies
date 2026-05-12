@@ -185,8 +185,9 @@ rmdir /S /Q "freetype-%FREETYPE%"
 
 echo Building HarfBuzz...
 rmdir /S /Q "harfbuzz-%HARFBUZZ%"
-tar -xf "harfbuzz-%HARFBUZZ%.tar.gz" || goto error
+tar -xf "harfbuzz-%HARFBUZZ%.tar.gz" --exclude "harfbuzz-%HARFBUZZ%/CLAUDE.md" || goto error
 cd "harfbuzz-%HARFBUZZ%" || goto error
+%PATCH% -p1 < "%SCRIPTDIR%\patches\harfbuzz-14.2.0-fix-cmake.patch" || goto error
 cmake %ARM64TOOLCHAIN% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build -G Ninja || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
