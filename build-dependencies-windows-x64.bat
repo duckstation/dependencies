@@ -66,7 +66,6 @@ call :downloadfile "SDL3-%SDL3%.zip" "https://github.com/libsdl-org/SDL/releases
 call :downloadfile "sqlite-amalgamation-%SQLITE%.zip" "https://sqlite.org/2026/sqlite-amalgamation-%SQLITE%.zip" "%SQLITE_ZIP_HASH%" || goto error
 call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
 call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
-call :downloadfile "qtsvg-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtsvg-everywhere-src-%QT%.zip" "%QTSVG_ZIP_HASH%" || goto error
 call :downloadfile "qttools-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttools-everywhere-src-%QT%.zip" "%QTTOOLS_ZIP_HASH%" || goto error
 call :downloadfile "qttranslations-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttranslations-everywhere-src-%QT%.zip" "%QTTRANSLATIONS_ZIP_HASH%" || goto error
 call :downloadfile "libwebp-%LIBWEBP%.tar.gz" "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%LIBWEBP%.tar.gz" "%LIBWEBP_GZ_HASH%" || goto error
@@ -233,18 +232,6 @@ cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
 rmdir /S /Q "qtbase-everywhere-src-%QT%"
-
-echo Building Qt SVG...
-rmdir /S /Q "qtsvg-everywhere-src-%QT%"
-%SEVENZIP% x "qtsvg-everywhere-src-%QT%.zip" || goto error
-cd "qtsvg-everywhere-src-%QT%" || goto error
-mkdir build || goto error
-cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=OFF || goto error
-cmake --build . --parallel || goto error
-ninja install || goto error
-cd ..\.. || goto error
-rmdir /S /Q "qtsvg-everywhere-src-%QT%"
 
 echo Building Qt Image Formats...
 rmdir /S /Q "qtimageformats-everywhere-src-%QT%"

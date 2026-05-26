@@ -25,8 +25,6 @@ curl -C - -L \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.zip" \
-  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
-  -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
@@ -59,8 +57,6 @@ $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
 $QTBASE_ZIP_HASH  qtbase-everywhere-src-$QT.zip
 $QTIMAGEFORMATS_XZ_HASH  qtimageformats-everywhere-src-$QT.tar.xz
 $QTIMAGEFORMATS_ZIP_HASH  qtimageformats-everywhere-src-$QT.zip
-$QTSVG_XZ_HASH  qtsvg-everywhere-src-$QT.tar.xz
-$QTSVG_ZIP_HASH  qtsvg-everywhere-src-$QT.zip
 $QTTOOLS_XZ_HASH  qttools-everywhere-src-$QT.tar.xz
 $QTTOOLS_ZIP_HASH  qttools-everywhere-src-$QT.zip
 $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz

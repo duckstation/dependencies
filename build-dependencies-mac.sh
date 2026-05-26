@@ -91,7 +91,6 @@ $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz
 $MOLTENVK_GZ_HASH  v$MOLTENVK_VERSION.tar.gz
 $QTBASE_XZ_HASH  qtbase-everywhere-src-$QT.tar.xz
 $QTIMAGEFORMATS_XZ_HASH  qtimageformats-everywhere-src-$QT.tar.xz
-$QTSVG_XZ_HASH  qtsvg-everywhere-src-$QT.tar.xz
 $QTTOOLS_XZ_HASH  qttools-everywhere-src-$QT.tar.xz
 $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz
 $CPUINFO_GZ_HASH  cpuinfo-$CPUINFO_COMMIT.tar.gz
@@ -117,7 +116,6 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "brotli-$BROTLI.tar.gz" ]]; then
       -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtbase-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtimageformats-everywhere-src-$QT.tar.xz" \
-      -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtsvg-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttools-everywhere-src-$QT.tar.xz" \
       -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
       -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
@@ -324,28 +322,11 @@ patch -p1 < "$SCRIPTDIR/patches/qtbase-fusion-style.patch"
 # Allow window-modal dialog boxes in Tahoe, it's not a problem for us.
 patch -p1 < "$SCRIPTDIR/patches/qtbase-window-modal-tahoe.patch"
 
-# since we don't have a direct reference to QtSvg, it doesn't deployed directly from the main binary
-# (only indirectly from iconengines), and the libqsvg.dylib imageformat plugin does not get deployed.
-# We could run macdeployqt twice, but that's even more janky than patching it.
-patch -p1 < "$SCRIPTDIR/patches/qtbase-macdeploy-imageformats.patch"
-
 cmake -B build "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_dbus=OFF -DFEATURE_framework=OFF -DFEATURE_icu=OFF -DFEATURE_opengl=OFF -DFEATURE_sql=OFF -DFEATURE_gssapi=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_brotli=OFF
 make -C build "-j$NPROCS"
 make -C build install
 cd ..
 rm -fr "qtbase-everywhere-src-$QT"
-
-echo "Building Qt SVG..."
-rm -fr "qtsvg-everywhere-src-$QT"
-tar xf "qtsvg-everywhere-src-$QT.tar.xz"
-cd "qtsvg-everywhere-src-$QT"
-mkdir build
-cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}"
-make "-j$NPROCS"
-make install
-cd ../..
-rm -fr "qtsvg-everywhere-src-$QT"
 
 echo "Building Qt Image Formats..."
 rm -fr "qtimageformats-everywhere-src-$QT"
