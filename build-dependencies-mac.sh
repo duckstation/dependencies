@@ -305,9 +305,9 @@ unzip "sqlite-amalgamation-$SQLITE.zip"
 cd "sqlite-amalgamation-$SQLITE"
 patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
 sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
-cmake "${CMAKE_COMMON[@]}" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
-cmake --build build --parallel
-ninja -C build install
+cmake -B build "${CMAKE_COMMON[@]}" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF
+make -C build "-j$NPROCS"
+make -C build install
 cd ..
 rm -fr "sqlite-amalgamation-$SQLITE"
 
