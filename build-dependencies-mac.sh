@@ -85,7 +85,7 @@ $LIBJPEGTURBO_GZ_HASH  libjpeg-turbo-$LIBJPEGTURBO.tar.gz
 $LIBWEBP_GZ_HASH  libwebp-$LIBWEBP.tar.gz
 $LIBZIP_GZ_HASH  libzip-$LIBZIP.tar.gz
 $SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
-$SDL3_GZ_HASH  SDL3-$SDL3.tar.gz
+$SDL3_GZ_HASH  SDL-release-$SDL3.tar.gz
 $ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
 $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz
 $MOLTENVK_GZ_HASH  v$MOLTENVK_VERSION.tar.gz
@@ -110,7 +110,7 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "brotli-$BROTLI.tar.gz" ]]; then
       -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
       -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
       -O "https://sqlite.org/2026/sqlite-amalgamation-$SQLITE.zip" \
-      -O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
+      -o "SDL-release-$SDL3.tar.gz" "https://github.com/libsdl-org/SDL/archive/refs/tags/release-$SDL3.tar.gz" \
       -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
       -O "https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.xz" \
       -O "https://github.com/KhronosGroup/MoltenVK/archive/refs/tags/v$MOLTENVK_VERSION.tar.gz" \
@@ -244,14 +244,14 @@ cd ..
 rm -fr "harfbuzz-$HARFBUZZ"
 
 echo "Building SDL..."
-rm -fr "SDL3-$SDL3"
-tar xf "SDL3-$SDL3.tar.gz"
-cd "SDL3-$SDL3"
+rm -fr "SDL-release-$SDL3"
+tar xf "SDL-release-$SDL3.tar.gz"
+cd "SDL-release-$SDL3"
 cmake -B build "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_UNIVERSAL" -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_X11=OFF -DBUILD_SHARED_LIBS=ON
 make -C build "-j$NPROCS"
 make -C build install
 cd ..
-rm -fr "SDL3-$SDL3"
+rm -fr "SDL-release-$SDL3"
 
 echo "Building FFmpeg..."
 rm -fr "ffmpeg-$FFMPEG_VERSION"

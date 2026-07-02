@@ -62,7 +62,7 @@ call :downloadfile "freetype-%FREETYPE%.tar.gz" "https://download.savannah.gnu.o
 call :downloadfile "harfbuzz-%HARFBUZZ%.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/%HARFBUZZ%.tar.gz" "%HARFBUZZ_GZ_HASH%" || goto error
 call :downloadfile "libpng-%LIBPNG%.tar.gz" "https://download.sourceforge.net/libpng/libpng-%LIBPNG%.tar.gz" "%LIBPNG_GZ_HASH%" || goto error
 call :downloadfile "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%LIBJPEGTURBO%/libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "%LIBJPEGTURBO_GZ_HASH%" || goto error
-call :downloadfile "SDL3-%SDL3%.zip" "https://github.com/libsdl-org/SDL/releases/download/release-%SDL3%/SDL3-%SDL3%.zip" "%SDL3_ZIP_HASH%" || goto error
+call :downloadfile "SDL-release-%SDL3%.tar.gz" "https://github.com/libsdl-org/SDL/archive/refs/tags/release-%SDL3%.tar.gz" "%SDL3_GZ_HASH%" || goto error
 call :downloadfile "sqlite-amalgamation-%SQLITE%.zip" "https://sqlite.org/2026/sqlite-amalgamation-%SQLITE%.zip" "%SQLITE_ZIP_HASH%" || goto error
 call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
 call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
@@ -190,15 +190,15 @@ cd .. || goto error
 rmdir /S /Q "harfbuzz-%HARFBUZZ%"
 
 echo Building SDL...
-rmdir /S /Q "SDL3-%SDL3%"
-%SEVENZIP% x "SDL3-%SDL3%.zip" || goto error
-cd "SDL3-%SDL3%" || goto error
+rmdir /S /Q "SDL-release-%SDL3%"
+tar -xf "SDL-release-%SDL3%.tar.gz" || goto error
+cd "SDL-release-%SDL3%" || goto error
 cmake -B build -DCMAKE_BUILD_TYPE=Release %FORCEPDB% -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_INSTALL_CMAKEDIR_ROOT="%INSTALLDIR%\lib\cmake\SDL3" -G Ninja || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 copy build\SDL3.pdb "%INSTALLDIR%\bin" || goto error
 cd .. || goto error
-rmdir /S /Q "SDL3-%SDL3%"
+rmdir /S /Q "SDL-release-%SDL3%"
 
 echo Building SQLite...
 rmdir /S /Q "sqlite-amalgamation-%SQLITE%"

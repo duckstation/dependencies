@@ -31,8 +31,7 @@ curl -C - -L \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtwayland-everywhere-src-$QT.tar.xz" \
   -o "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz" "https://github.com/ianlancetaylor/libbacktrace/archive/$LIBBACKTRACE_COMMIT.tar.gz" \
-  -O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.tar.gz" \
-  -O "https://github.com/libsdl-org/SDL/releases/download/release-$SDL3/SDL3-$SDL3.zip" \
+  -o "SDL-release-$SDL3.tar.gz" "https://github.com/libsdl-org/SDL/archive/refs/tags/release-$SDL3.tar.gz" \
   -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
   -o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
   -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
@@ -63,8 +62,7 @@ $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz
 $QTTRANSLATIONS_ZIP_HASH  qttranslations-everywhere-src-$QT.zip
 $QTWAYLAND_XZ_HASH  qtwayland-everywhere-src-$QT.tar.xz
 $LIBBACKTRACE_GZ_HASH  libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz
-$SDL3_GZ_HASH  SDL3-$SDL3.tar.gz
-$SDL3_ZIP_HASH  SDL3-$SDL3.zip
+$SDL3_GZ_HASH  SDL-release-$SDL3.tar.gz
 $CPUINFO_GZ_HASH  cpuinfo-$CPUINFO_COMMIT.tar.gz
 $DISCORD_RPC_GZ_HASH  discord-rpc-$DISCORD_RPC_COMMIT.tar.gz
 $PLUTOSVG_GZ_HASH  plutosvg-$PLUTOSVG_COMMIT.tar.gz
