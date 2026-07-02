@@ -44,6 +44,7 @@ CMAKE_COMMON=(
   -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE"
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
   -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
+  -DCMAKE_INSTALL_LIBDIR=lib
 )
 
 # Determine architecture.
@@ -181,7 +182,7 @@ echo "Building libbacktrace..."
 rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
 tar xf "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz"
 cd "libbacktrace-$LIBBACKTRACE_COMMIT"
-CFLAGS="-fmacro-prefix-map=\"${PWD}\"=. -ffile-prefix-map=\"${PWD}\"=." ./configure --prefix="$INSTALLDIR" --build=x86_64-linux-gnu --host="${CROSSTRIPLET}" --with-pic --enable-shared --disable-static
+CFLAGS="-fmacro-prefix-map=\"${PWD}\"=. -ffile-prefix-map=\"${PWD}\"=." ./configure --prefix="$INSTALLDIR" --libdir="$INSTALLDIR/lib" --build=x86_64-linux-gnu --host="${CROSSTRIPLET}" --with-pic --enable-shared --disable-static
 make
 make install
 cd ..
@@ -313,7 +314,7 @@ cd "qtbase-everywhere-src-$QT"
 patch -p1 < "$SCRIPTDIR/patches/qtbase-fusion-style.patch"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DQT_GENERATE_SBOM=OFF -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DQT_GENERATE_SBOM=OFF -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
