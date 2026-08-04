@@ -41,7 +41,8 @@ source "$SCRIPTDIR/versions"
 LAME=3.100
 LIBVPX=1.15.2
 FDK_AAC=0fc0e0e0b89de3becd5f099eae725f13eeecc0d1
-LIBAOM=d772e334cc724105040382a977ebb10dfd393293
+LIBAOM_TAG=v3.14.1
+LIBAOM_SHA=03087864cf4bea6abb0d28f95cf7843511413d8f
 LIBOGG=1.3.5
 LIBVORBIS=1.3.7
 LIBTHEORA=1.1.1
@@ -115,10 +116,11 @@ if [ "$SKIP_DOWNLOAD" != true ]; then
     curl -C - -L -o "fdk-aac-stripped-$FDK_AAC.tar.gz" "https://gitlab.freedesktop.org/wtaymans/fdk-aac-stripped/-/archive/$FDK_AAC/fdk-aac-stripped-$FDK_AAC.tar.gz"
   fi
   if [ ! -d "aom" ]; then
-    git clone https://aomedia.googlesource.com/aom
-    cd aom
-    git checkout "$LIBAOM"
-    cd ..
+    git clone https://aomedia.googlesource.com/aom --depth 1 --single-branch -b "$LIBAOM_TAG"
+    if [ "$(git -C aom rev-parse HEAD)" != "$LIBAOM_SHA" ]; then
+      echo "Unexpected SHA mismatch in aom $(git -C aom rev-parse HEAD)"
+      exit 1
+    fi
   fi
   if [ ! -f "libogg-$LIBOGG.tar.gz" ]; then
     curl -C - -L -O "https://downloads.xiph.org/releases/ogg/libogg-$LIBOGG.tar.gz"
