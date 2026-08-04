@@ -14,21 +14,24 @@ if exist "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Buil
 set SEVENZIP="C:\Program Files\7-Zip\7z.exe"
 set PATCH="C:\Program Files\Git\usr\bin\patch.exe"
 
+set SKIPDOWNLOAD=0
 set SKIPCLEANUP=0
 set DEBUG=1
 :parseargs
-if "%~1"=="-skip-cleanup" (
+if "%~1"=="" goto argsparsed
+if "%~1"=="-skip-download" (
+  echo Skipping source downloads.
+  set SKIPDOWNLOAD=1
+) else if "%~1"=="-skip-cleanup" (
   echo Skipping directory cleanup.
   set SKIPCLEANUP=1
-  shift
-  goto parseargs
-)
-if "%~1"=="-no-debug" (
+) else if "%~1"=="-no-debug" (
   echo Skipping debug build.
   set DEBUG=0
-  shift
-  goto parseargs
 )
+shift
+goto parseargs
+:argsparsed
 
 pushd %~dp0
 set "SCRIPTDIR=%CD%"
@@ -82,7 +85,7 @@ call :downloadfile "shaderc-%SHADERC_COMMIT%.tar.gz" "https://github.com/stenzek
 call :downloadfile "soundtouch-%SOUNDTOUCH_COMMIT%.tar.gz" "https://github.com/stenzek/soundtouch/archive/%SOUNDTOUCH_COMMIT%.tar.gz" "%SOUNDTOUCH_GZ_HASH%" || goto error
 call :downloadfile "dxcompiler-%DXCOMPILER_VERSION%.zip" "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.DXC/%DXCOMPILER_VERSION%" "%DXCOMPILER_ZIP_HASH%" || goto error
 
-if not exist SPIRV-Cross\ (
+if "%SKIPDOWNLOAD%"=="0" if not exist SPIRV-Cross\ (
   git clone https://github.com/KhronosGroup/SPIRV-Cross/ -b %SPIRV_CROSS_TAG% --depth 1 || goto error
   pushd SPIRV-Cross
   git reset --hard %SPIRV_CROSS_SHA% || goto error
@@ -366,9 +369,13 @@ pause
 exit %errorlevel%
 
 :downloadfile
-if not exist "%~1" (
+if "%SKIPDOWNLOAD%"=="0" if not exist "%~1" (
   echo Downloading %~1 from %~2...
-  curl -L -o "%~1" "%~2" || goto error
+  curl -L -o "%~1" "%~2" || exit /B 1
+)
+if not exist "%~1" (
+  echo Required source file %~1 not found.
+  exit /B 1
 )
 
 rem based on https://gist.github.com/gsscoder/e22daefaff9b5d8ac16afb070f1a7971
