@@ -51,7 +51,7 @@ SPEEX=1.2.0
 AMF=1.5.2
 OPUS=1.5.2
 SVT_AV1=3.1.2
-GLSLANG=15.4.0
+SHADERC=2026.3
 VULKAN_HEADERS=1.4.329
 
 # Encoder list from freedesktop SDK, which apparently came from Fedora.
@@ -146,8 +146,8 @@ if [ "$SKIP_DOWNLOAD" != true ]; then
   if [ ! -f "SVT-AV1-$SVT_AV1.tar.gz" ]; then
     curl -C - -L -O "https://gitlab.com/AOMediaCodec/SVT-AV1/-/archive/v$SVT_AV1/SVT-AV1-$SVT_AV1.tar.gz"
   fi
-  if [ ! -f "glslang-$GLSLANG.tar.gz" ]; then
-    curl -C - -L -o "glslang-$GLSLANG.tar.gz" "https://github.com/KhronosGroup/glslang/archive/refs/tags/$GLSLANG.tar.gz"
+  if [ ! -f "shaderc-$SHADERC.tar.gz" ]; then
+    curl -C - -L -o "shaderc-$SHADERC.tar.gz" "https://github.com/google/shaderc/archive/refs/tags/v$SHADERC.tar.gz"
   fi
   if [ ! -f "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" ]; then
     curl -C - -L -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
@@ -168,7 +168,7 @@ b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc  libtheora-$LIB
 65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1  opus-$OPUS.tar.gz
 eaae8af0ac742dc7d542c9439ac72f1f385ce838392dc849cae4536af9210094  speex-$SPEEX.tar.gz
 084720e7818cec7cb38d31ab478478b910d643fe5b13fc2cfcbd9da9c9d5c84b  SVT-AV1-$SVT_AV1.tar.gz
-b16c78e7604b9be9f546ee35ad8b6db6f39bbbbfb19e8d038b6fe2ea5bba4ff4  glslang-$GLSLANG.tar.gz
+ee493ccf1b3038b4ef2fe024664c5eb2dc4bcc1f6b05b33e3909de0e19c81024  shaderc-$SHADERC.tar.gz
 7ea67aabccdecc6ef616b4c243f563ac9bca945a63d4f4cca21f1bbcd828b18e  Vulkan-Headers-$VULKAN_HEADERS.tar.gz
 EOF
 
@@ -310,12 +310,13 @@ cmake --build build-ds --parallel
 cmake --install build-ds
 cd ..
 
-echo "Building glslang..."
-rm -fr "glslang-$GLSLANG"
-tar xf "glslang-$GLSLANG.tar.gz"
-cd "glslang-$GLSLANG"
-./update_glslang_sources.py
-cmake -B build-ds -G Ninja -DCMAKE_INSTALL_PREFIX="$DEPSINSTALLDIR" -DCMAKE_PREFIX_PATH="$DEPSINSTALLDIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF -DGLSLANG_TESTS=OFF
+echo "Building shaderc..."
+rm -fr "shaderc-$SHADERC"
+tar xf "shaderc-$SHADERC.tar.gz"
+cd "shaderc-$SHADERC"
+./utils/git-sync-deps
+cmake -B build-ds -G Ninja -DCMAKE_INSTALL_PREFIX="$DEPSINSTALLDIR" -DCMAKE_PREFIX_PATH="$DEPSINSTALLDIR" -DCMAKE_BUILD_TYPE=Release \
+       -DSHADERC_ENABLE_HLSL=OFF -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_TESTS=ON -DSPIRV_SKIP_TESTS=ON
 cmake --build build-ds --parallel
 cmake --install build-ds
 cd ..
@@ -333,7 +334,8 @@ cd build
   --extra-ldsoflags="-Wl,-rpath,XORIGIN" \
   --disable-all --disable-autodetect --enable-libmp3lame --enable-libvpx --enable-zlib --enable-libwebp \
   --enable-libfdk-aac --enable-libaom --enable-libvorbis --enable-libtheora --enable-libspeex \
-  --enable-v4l2-m2m --enable-vaapi --enable-amf --enable-libopus --enable-libsvtav1 --enable-vulkan --enable-libglslang \
+  --enable-v4l2-m2m --enable-vaapi --enable-amf --enable-libopus --enable-libsvtav1 \
+  --enable-vulkan --glslc="$DEPSINSTALLDIR/bin/glslc" \
   --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale \
   --enable-muxer=avi,matroska,mov,mp3,mp4,wav \
   --enable-protocol=file \
