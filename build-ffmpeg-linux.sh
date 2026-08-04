@@ -54,10 +54,32 @@ SVT_AV1=3.1.2
 SHADERC=2026.3
 SPIRV_HEADERS=vulkan-sdk-1.4.357.0
 VULKAN_HEADERS=1.4.329
+OPENH264=2.6.0
+OPENH264_ABI=8
+
+case "$(uname -m)" in
+  x86_64|amd64)
+    OPENH264_PLATFORM=linux64
+    ;;
+  i?86)
+    OPENH264_PLATFORM=linux32
+    ;;
+  arm|armv7l|armv8l)
+    OPENH264_PLATFORM=linux-arm
+    ;;
+  aarch64|arm64)
+    OPENH264_PLATFORM=linux-arm64
+    ;;
+  *)
+    echo "No official Cisco OpenH264 binary is available for architecture $(uname -m)." >&2
+    exit 1
+    ;;
+esac
+OPENH264_BINARY="libopenh264-$OPENH264-$OPENH264_PLATFORM.$OPENH264_ABI.so"
 
 # Encoder list from freedesktop SDK, which apparently came from Fedora.
 # Disabled list: av1_qsv h264_qsv hevc_qsv mjpeg_qsv mpeg2_qsv vc1_qsv vp8_qsv vp9_qsv
-# av1_nvenc h264_nvenc hevc_nvenc libxvid libtwolame libopenh264 libgsm libgsm_ms
+# av1_nvenc h264_nvenc hevc_nvenc libxvid libtwolame libgsm libgsm_ms
 # ilbc libilbc libopencore_amrnb libopenjpeg libvo_amrwbenc libjxl libcodec2 hap librav1e
 FFMPEG_ENCODER_LIST=""\
 "a64multi a64multi5 aac libfdk_aac ac3 adpcm_adx "\
@@ -73,7 +95,7 @@ FFMPEG_ENCODER_LIST=""\
 "h264_v4l2m2m h264_vaapi h264_vulkan hdr hevc_amf "\
 "hevc_v4l2m2m hevc_vaapi hevc_vulkan huffyuv jpegls "\
 "jpeg2000 libaom libaom_av1 libmp3lame "\
-"libopus libschroedinger libspeex libsvtav1 libtheora "\
+"libopenh264 libopus libschroedinger libspeex libsvtav1 libtheora "\
 "libvorbis libvpx_vp8 libvpx_vp9 libwebp "\
 "libwebp_anim mjpeg mjpeg_vaapi mlp "\
 "mp2 mp2fixed mpeg1video mpeg2video mpeg2_vaapi "\
@@ -156,6 +178,17 @@ if [ "$SKIP_DOWNLOAD" != true ]; then
   if [ ! -f "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" ]; then
     curl -C - -L -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
   fi
+  if [ ! -f "$OPENH264_BINARY.bz2" ]; then
+    curl -C - -fL -o "$OPENH264_BINARY.bz2" "https://ciscobinary.openh264.org/$OPENH264_BINARY.bz2"
+  fi
+  for header in codec_api.h codec_app_def.h codec_def.h codec_ver.h; do
+    if [ ! -f "openh264-$OPENH264-$header" ]; then
+      curl -fL -o "openh264-$OPENH264-$header" "https://raw.githubusercontent.com/cisco/openh264/v$OPENH264/codec/api/wels/$header"
+    fi
+  done
+  if [ ! -f "openh264-BINARY_LICENSE.txt" ]; then
+    curl -fL -o "openh264-BINARY_LICENSE.txt" "https://www.openh264.org/BINARY_LICENSE.txt"
+  fi
 fi
 
 cat > SHASUMS <<EOF
@@ -180,6 +213,29 @@ EOF
 shasum -a 256 --check SHASUMS
 
 export PKG_CONFIG_PATH="$INSTALLDIR/lib/pkgconfig:$INSTALLDIR/lib64/pkgconfig:$DEPSINSTALLDIR/lib/pkgconfig:$DEPSINSTALLDIR/lib64/pkgconfig:$PKG_CONFIG_PATH"
+
+echo "Installing OpenH264..."
+mkdir -p "$DEPSINSTALLDIR/include/wels" "$DEPSINSTALLDIR/lib/pkgconfig" "$DEPSINSTALLDIR/share/licenses/openh264"
+for header in codec_api.h codec_app_def.h codec_def.h codec_ver.h; do
+  install -m 644 "openh264-$OPENH264-$header" "$DEPSINSTALLDIR/include/wels/$header"
+done
+bzip2 -dc "$OPENH264_BINARY.bz2" > "$DEPSINSTALLDIR/lib/$OPENH264_BINARY"
+chmod 755 "$DEPSINSTALLDIR/lib/$OPENH264_BINARY"
+ln -sfn "$OPENH264_BINARY" "$DEPSINSTALLDIR/lib/libopenh264.so.$OPENH264_ABI"
+ln -sfn "libopenh264.so.$OPENH264_ABI" "$DEPSINSTALLDIR/lib/libopenh264.so"
+install -m 644 "openh264-BINARY_LICENSE.txt" "$DEPSINSTALLDIR/share/licenses/openh264/BINARY_LICENSE.txt"
+cat > "$DEPSINSTALLDIR/lib/pkgconfig/openh264.pc" <<EOF
+prefix=$DEPSINSTALLDIR
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: OpenH264
+Description: OpenH264 H.264 encoder and decoder
+Version: $OPENH264
+Libs: -L\${libdir} -lopenh264
+Libs.private: -lstdc++
+Cflags: -I\${includedir}
+EOF
 
 echo "Building LAME"
 rm -fr "lame-$LAME"
@@ -348,7 +404,7 @@ cd build
   --extra-ldflags="-L$DEPSINSTALLDIR/lib" --extra-ldflags="-L$DEPSINSTALLDIR/lib64" \
   --extra-ldsoflags="-Wl,-rpath,XORIGIN" \
   --disable-all --disable-autodetect --enable-libmp3lame --enable-libvpx --enable-zlib --enable-libwebp \
-  --enable-libfdk-aac --enable-libaom --enable-libvorbis --enable-libtheora --enable-libspeex \
+  --enable-libfdk-aac --enable-libaom --enable-libvorbis --enable-libtheora --enable-libspeex --enable-libopenh264 \
   --enable-v4l2-m2m --enable-vaapi --enable-amf --enable-libopus --enable-libsvtav1 \
   --enable-vulkan --glslc="$DEPSINSTALLDIR/bin/glslc" \
   --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale \
@@ -358,6 +414,13 @@ cd build
 
 make -j "$NPROCS"
 make install
+
+# Bundle the exact Cisco binary selected for this architecture next to FFmpeg.
+mkdir -p "$INSTALLDIR/lib" "$INSTALLDIR/share/licenses/openh264"
+install -m 755 "$DEPSINSTALLDIR/lib/$OPENH264_BINARY" "$INSTALLDIR/lib/$OPENH264_BINARY"
+ln -sfn "$OPENH264_BINARY" "$INSTALLDIR/lib/libopenh264.so.$OPENH264_ABI"
+ln -sfn "libopenh264.so.$OPENH264_ABI" "$INSTALLDIR/lib/libopenh264.so"
+install -m 644 "$DEPSINSTALLDIR/share/licenses/openh264/BINARY_LICENSE.txt" "$INSTALLDIR/share/licenses/openh264/BINARY_LICENSE.txt"
 
 # Fix up rpath to point to current directory.
 find "$INSTALLDIR" -name 'libavcodec.so' -exec patchelf --set-rpath '$ORIGIN' {} \;
