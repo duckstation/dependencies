@@ -14,7 +14,14 @@ merge_binaries() {
     if file "$X86DIR/$X86BIN" | grep "Mach-O " | grep " x86_64" >/dev/null; then
       ARMBIN="${ARMDIR}/${X86BIN}"
       echo "Merge $ARMBIN to $X86BIN..."
-      lipo -create "$X86BIN" "$ARMBIN" -o "$X86BIN"
+      if ! file "$ARMBIN" | grep "Mach-O " | grep " arm64" >/dev/null; then
+        echo "Missing ARM64 Mach-O binary for $X86BIN."
+        exit 1
+      fi
+      UNIVERSALBIN="${X86BIN}.universal"
+      lipo -create "$X86BIN" "$ARMBIN" -output "$UNIVERSALBIN"
+      lipo "$UNIVERSALBIN" -verify_arch x86_64 arm64
+      mv "$UNIVERSALBIN" "$X86BIN"
     fi
   done
   popd
@@ -61,6 +68,7 @@ export CFLAGS="-I$INSTALLDIR/include $CFLAGS"
 export CXXFLAGS="-I$INSTALLDIR/include $CXXFLAGS"
 CMAKE_COMMON=(
   -DCMAKE_BUILD_TYPE="Release"
+  -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
   -DCMAKE_SHARED_LINKER_FLAGS="-dead_strip -dead_strip_dylibs"
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
   -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
@@ -203,8 +211,12 @@ cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -B build-arm64 \
   -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
   -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
 make -C build-arm64 "-j$NPROCS"
-merge_binaries $(realpath build) $(realpath build-arm64)
-make -C build install
+# Run CMake's install and install_name_tool steps on each thin build before merging. A fat dylib assembled in the build
+# tree has a different build RPATH in each slice, which CMake cannot remove correctly during installation.
+DESTDIR="$PWD/install-x64" cmake --install build
+DESTDIR="$PWD/install-arm64" cmake --install build-arm64
+merge_binaries "$PWD/install-x64$INSTALLDIR" "$PWD/install-arm64$INSTALLDIR"
+cp -R "$PWD/install-x64$INSTALLDIR/." "$INSTALLDIR/"
 cd ..
 rm -fr "libwebp-$LIBWEBP"
 
