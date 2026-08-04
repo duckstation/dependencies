@@ -52,6 +52,7 @@ AMF=1.5.2
 OPUS=1.5.2
 SVT_AV1=3.1.2
 SHADERC=2026.3
+SPIRV_HEADERS=vulkan-sdk-1.4.357.0
 VULKAN_HEADERS=1.4.329
 
 # Encoder list from freedesktop SDK, which apparently came from Fedora.
@@ -149,6 +150,9 @@ if [ "$SKIP_DOWNLOAD" != true ]; then
   if [ ! -f "shaderc-$SHADERC.tar.gz" ]; then
     curl -C - -L -o "shaderc-$SHADERC.tar.gz" "https://github.com/google/shaderc/archive/refs/tags/v$SHADERC.tar.gz"
   fi
+  if [ ! -f "SPIRV-Headers-$SPIRV_HEADERS.tar.gz" ]; then
+    curl -C - -L -o "SPIRV-Headers-$SPIRV_HEADERS.tar.gz" "https://github.com/KhronosGroup/SPIRV-Headers/archive/refs/tags/$SPIRV_HEADERS.tar.gz"
+  fi
   if [ ! -f "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" ]; then
     curl -C - -L -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
   fi
@@ -169,6 +173,7 @@ b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc  libtheora-$LIB
 eaae8af0ac742dc7d542c9439ac72f1f385ce838392dc849cae4536af9210094  speex-$SPEEX.tar.gz
 084720e7818cec7cb38d31ab478478b910d643fe5b13fc2cfcbd9da9c9d5c84b  SVT-AV1-$SVT_AV1.tar.gz
 ee493ccf1b3038b4ef2fe024664c5eb2dc4bcc1f6b05b33e3909de0e19c81024  shaderc-$SHADERC.tar.gz
+4d703067a7e06331ccb37bdfed3f9b7879cc61969a2689ae95c95db34a47ff07  SPIRV-Headers-$SPIRV_HEADERS.tar.gz
 7ea67aabccdecc6ef616b4c243f563ac9bca945a63d4f4cca21f1bbcd828b18e  Vulkan-Headers-$VULKAN_HEADERS.tar.gz
 EOF
 
@@ -305,6 +310,16 @@ echo "Building Vulkan-Headers..."
 rm -fr "Vulkan-Headers-$VULKAN_HEADERS"
 tar xf "Vulkan-Headers-$VULKAN_HEADERS.tar.gz"
 cd "Vulkan-Headers-$VULKAN_HEADERS"
+cmake -B build-ds -G Ninja -DCMAKE_INSTALL_PREFIX="$DEPSINSTALLDIR" -DCMAKE_PREFIX_PATH="$DEPSINSTALLDIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF
+cmake --build build-ds --parallel
+cmake --install build-ds
+cd ..
+
+echo "Building SPIRV-Headers"
+rm -fr "SPIRV-Headers-$SPIRV_HEADERS"
+tar -xf "SPIRV-Headers-$SPIRV_HEADERS.tar.gz"
+cd "SPIRV-Headers-$SPIRV_HEADERS"
+rm -fr build-ds
 cmake -B build-ds -G Ninja -DCMAKE_INSTALL_PREFIX="$DEPSINSTALLDIR" -DCMAKE_PREFIX_PATH="$DEPSINSTALLDIR" -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=OFF
 cmake --build build-ds --parallel
 cmake --install build-ds
