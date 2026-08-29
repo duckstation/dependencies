@@ -30,6 +30,7 @@ curl -C - -L \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.tar.xz" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qttranslations-everywhere-src-$QT.zip" \
   -O "https://download.qt.io/official_releases/qt/${QT%.*}/$QT/submodules/qtwayland-everywhere-src-$QT.tar.xz" \
+  -O "https://download.qt.io/archive/online_installers/$QTINSTALLERMINOR/qt-online-installer-windows-x64-$QTINSTALLER.exe" \
   -o "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz" "https://github.com/ianlancetaylor/libbacktrace/archive/$LIBBACKTRACE_COMMIT.tar.gz" \
   -o "SDL-release-$SDL3.tar.gz" "https://github.com/libsdl-org/SDL/archive/refs/tags/release-$SDL3.tar.gz" \
   -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
@@ -61,6 +62,7 @@ $QTTOOLS_ZIP_HASH  qttools-everywhere-src-$QT.zip
 $QTTRANSLATIONS_XZ_HASH  qttranslations-everywhere-src-$QT.tar.xz
 $QTTRANSLATIONS_ZIP_HASH  qttranslations-everywhere-src-$QT.zip
 $QTWAYLAND_XZ_HASH  qtwayland-everywhere-src-$QT.tar.xz
+$QTINSTALLER_EXE_HASH  qt-online-installer-windows-x64-$QTINSTALLER.exe
 $LIBBACKTRACE_GZ_HASH  libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz
 $SDL3_GZ_HASH  SDL-release-$SDL3.tar.gz
 $CPUINFO_GZ_HASH  cpuinfo-$CPUINFO_COMMIT.tar.gz

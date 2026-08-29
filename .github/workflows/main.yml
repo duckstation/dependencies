@@ -39,8 +39,8 @@ jobs:
         compression-level: 0
         if-no-files-found: error
 
-  build-windows:
-    name: "💻 Windows"
+  build-windows-source:
+    name: "💻 Windows (Qt Source)"
     needs: build-sources
     runs-on: windows-2025-vs2026
     timeout-minutes: 240
@@ -77,6 +77,53 @@ jobs:
         path: |
           deps-windows-x64.7z
           deps-windows-arm64.7z
+        compression-level: 0
+        if-no-files-found: error
+
+  build-windows-installer:
+    name: "💻 Windows (Qt Installer)"
+    needs: build-sources
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 240
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Download Sources
+      uses: actions/download-artifact@v6
+      with:
+        name: deps-sources
+        path: ./deps-sources
+
+    - name: Extract Sources
+      shell: cmd
+      run: |
+        "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
+
+    - name: Build x64 Dependencies
+      env:
+        QT_INSTALLER_EMAIL: ${{ secrets.QT_INSTALLER_EMAIL }}
+        QT_INSTALLER_PASSWORD: ${{ secrets.QT_INSTALLER_PASSWORD }}
+      run: .\build-dependencies-windows.bat x64 -skip-download -skip-cleanup -qt-binaries
+
+    - name: Build ARM64 Dependencies
+      env:
+        QT_INSTALLER_EMAIL: ${{ secrets.QT_INSTALLER_EMAIL }}
+        QT_INSTALLER_PASSWORD: ${{ secrets.QT_INSTALLER_PASSWORD }}
+      run: .\build-dependencies-windows.bat arm64 -skip-download -skip-cleanup -qt-binaries
+
+    - name: Create Archives
+      shell: cmd
+      run: |
+        "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-qt-installer-x64.7z windows-x64
+        "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-qt-installer-arm64.7z windows-arm64
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v6
+      with:
+        name: deps-windows-qt-installer
+        path: |
+          deps-windows-qt-installer-x64.7z
+          deps-windows-qt-installer-arm64.7z
         compression-level: 0
         if-no-files-found: error
 
@@ -202,7 +249,7 @@ jobs:
   create-release:
     name: "📤 Create Release"
     if: github.ref == 'refs/heads/master'
-    needs: [build-windows, build-macos, build-linux-x64, build-linux-cross, build-sources]
+    needs: [build-windows-source, build-windows-installer, build-macos, build-linux-x64, build-linux-cross, build-sources]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
@@ -227,6 +274,8 @@ jobs:
           --notes "Dependencies built on $(date +'%Y-%m-%d') from commit ${{ github.sha }}." \
           artifacts/deps-windows/deps-windows-x64.7z \
           artifacts/deps-windows/deps-windows-arm64.7z \
+          artifacts/deps-windows-qt-installer/deps-windows-qt-installer-x64.7z \
+          artifacts/deps-windows-qt-installer/deps-windows-qt-installer-arm64.7z \
           artifacts/deps-macos-universal/deps-macos-universal.tar.xz \
           artifacts/deps-linux-x64/deps-linux-x64.tar.xz \
           artifacts/deps-linux-cross-arm64/deps-linux-cross-arm64.tar.xz \
