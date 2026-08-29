@@ -59,10 +59,10 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
 
     - name: Build x64 Dependencies
-      run: .\build-dependencies-windows-x64.bat -skip-download -skip-cleanup
+      run: .\build-dependencies-windows.bat x64 -skip-download -skip-cleanup
 
     - name: Build ARM64 Dependencies
-      run: .\build-dependencies-windows-arm64.bat -skip-download -skip-cleanup
+      run: .\build-dependencies-windows.bat arm64 -skip-download -skip-cleanup
 
     - name: Create Archives
       shell: cmd
