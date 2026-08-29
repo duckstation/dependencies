@@ -39,6 +39,7 @@ set PATCH="C:\Program Files\Git\usr\bin\patch.exe"
 set SKIPDOWNLOAD=0
 set SKIPCLEANUP=0
 set DEBUG=1
+set QTBINARIES=0
 :parseargs
 if "%~1"=="" goto argsparsed
 if "%~1"=="-skip-download" (
@@ -50,10 +51,22 @@ if "%~1"=="-skip-download" (
 ) else if "%~1"=="-no-debug" (
   echo Skipping debug build.
   set DEBUG=0
+) else if "%~1"=="-qt-binaries" (
+  echo Using pre-built Qt binaries.
+  set QTBINARIES=1
 )
 shift
 goto parseargs
 :argsparsed
+
+if "%QTBINARIES%"=="1" if not defined QT_INSTALLER_EMAIL (
+  echo QT_INSTALLER_EMAIL must be set when using -qt-binaries.
+  exit /B 1
+)
+if "%QTBINARIES%"=="1" if not defined QT_INSTALLER_PASSWORD (
+  echo QT_INSTALLER_PASSWORD must be set when using -qt-binaries.
+  exit /B 1
+)
 
 pushd %~dp0
 set "SCRIPTDIR=%CD%"
@@ -98,10 +111,14 @@ call :downloadfile "libpng-%LIBPNG%.tar.gz" "https://download.sourceforge.net/li
 call :downloadfile "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/%LIBJPEGTURBO%/libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" "%LIBJPEGTURBO_GZ_HASH%" || goto error
 call :downloadfile "SDL-release-%SDL3%.tar.gz" "https://github.com/libsdl-org/SDL/archive/refs/tags/release-%SDL3%.tar.gz" "%SDL3_GZ_HASH%" || goto error
 call :downloadfile "sqlite-amalgamation-%SQLITE%.zip" "https://sqlite.org/2026/sqlite-amalgamation-%SQLITE%.zip" "%SQLITE_ZIP_HASH%" || goto error
-call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
-call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
-call :downloadfile "qttools-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttools-everywhere-src-%QT%.zip" "%QTTOOLS_ZIP_HASH%" || goto error
-call :downloadfile "qttranslations-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttranslations-everywhere-src-%QT%.zip" "%QTTRANSLATIONS_ZIP_HASH%" || goto error
+if "%QTBINARIES%"=="1" (
+  call :downloadfile "qt-online-installer-windows-x64-%QTINSTALLER%.exe" "https://download.qt.io/archive/online_installers/%QTINSTALLERMINOR%/qt-online-installer-windows-x64-%QTINSTALLER%.exe" "%QTINSTALLER_EXE_HASH%" || goto error
+) else (
+  call :downloadfile "qtbase-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtbase-everywhere-src-%QT%.zip" "%QTBASE_ZIP_HASH%" || goto error
+  call :downloadfile "qtimageformats-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qtimageformats-everywhere-src-%QT%.zip" "%QTIMAGEFORMATS_ZIP_HASH%" || goto error
+  call :downloadfile "qttools-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttools-everywhere-src-%QT%.zip" "%QTTOOLS_ZIP_HASH%" || goto error
+  call :downloadfile "qttranslations-everywhere-src-%QT%.zip" "https://download.qt.io/official_releases/qt/%QTMINOR%/%QT%/submodules/qttranslations-everywhere-src-%QT%.zip" "%QTTRANSLATIONS_ZIP_HASH%" || goto error
+)
 call :downloadfile "libwebp-%LIBWEBP%.tar.gz" "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%LIBWEBP%.tar.gz" "%LIBWEBP_GZ_HASH%" || goto error
 call :downloadfile "libzip-%LIBZIP%.tar.gz" "https://github.com/nih-at/libzip/releases/download/v%LIBZIP%/libzip-%LIBZIP%.tar.gz" "%LIBZIP_GZ_HASH%" || goto error
 call :downloadfile "zlib-ng-%ZLIBNG%.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/%ZLIBNG%.tar.gz" "%ZLIBNG_GZ_HASH%" || goto error
@@ -246,6 +263,40 @@ ninja -C build install || goto error
 cd .. || goto error
 rmdir /S /Q "sqlite-amalgamation-%SQLITE%"
 
+if "%QTBINARIES%"=="0" goto buildqtsource
+
+set "QTPACKAGEVERSION=%QT:.=%"
+if "%ARCH%"=="x64" (
+  set "QTPLATFORM=msvc2022_64"
+  set "QTPACKAGESUFFIX=win64_msvc2022_64"
+) else (
+  set "QTPLATFORM=msvc2022_arm64"
+  set "QTPACKAGESUFFIX=win64_msvc2022_arm64_cross_compiled"
+)
+
+echo Installing pre-built Qt binaries...
+set "QTBINARYROOT=%BUILDDIR%\qt-binaries-%ARCH%"
+rmdir /S /Q "%QTBINARYROOT%"
+setlocal DisableDelayedExpansion
+rem Qt 6 uses the same binary artifacts for LGPLv3 and GPLv3. Do not select any GPL-only add-on packages.
+rem Selecting the add-on parent and base together automatically installs the virtual component for this platform.
+"%BUILDDIR%\qt-online-installer-windows-x64-%QTINSTALLER%.exe" --root "%QTBINARYROOT%" --type package --accept-licenses --accept-obligations --default-answer --confirm-command --no-default-installations --no-force-installations --auto-answer telemetry-question=No,AssociateCommonFiletypes=No --email "%QT_INSTALLER_EMAIL%" --pw "%QT_INSTALLER_PASSWORD%" install "qt.qt6.%QTPACKAGEVERSION%.%QTPACKAGESUFFIX%" "qt.qt6.%QTPACKAGEVERSION%.addons.qtimageformats" || goto error
+endlocal
+
+if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\bin\Qt6Core.dll" (
+  echo Pre-built Qt installation was not found in the expected location.
+  goto error
+)
+if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\plugins\imageformats\qwebp.dll" (
+  echo Pre-built Qt Image Formats plugins were not found in the expected location.
+  goto error
+)
+xcopy "%QTBINARYROOT%\%QT%\%QTPLATFORM%\*" "%INSTALLDIR%\" /E /H /I /Y || goto error
+rmdir /S /Q "%QTBINARYROOT%"
+goto qtbuilddone
+
+:buildqtsource
+
 if %DEBUG%==1 (
   set QTBUILDSPEC=-DCMAKE_CONFIGURATION_TYPES="Release;Debug" -G "Ninja Multi-Config"
 ) else (
@@ -302,6 +353,8 @@ cmake --build . --parallel || goto error
 ninja install || goto error
 cd ..\.. || goto error
 rmdir /S /Q "qttranslations-everywhere-src-%QT%"
+
+:qtbuilddone
 
 echo Building shaderc...
 rmdir /S /Q "shaderc-%SHADERC_COMMIT%"
@@ -391,7 +444,7 @@ echo Exiting with success.
 exit 0
 
 :usage
-echo Syntax: %~nx0 ^<x64^|arm64^> [-skip-download] [-skip-cleanup] [-no-debug]
+echo Syntax: %~nx0 ^<x64^|arm64^> [-skip-download] [-skip-cleanup] [-no-debug] [-qt-binaries]
 exit /B 1
 
 :error
