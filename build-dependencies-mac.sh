@@ -148,6 +148,57 @@ if [ "$ONLY_DOWNLOAD" == true ]; then
   exit 0
 fi
 
+echo "Building Qt Base..."
+rm -fr "qtbase-everywhere-src-$QT"
+tar xf "qtbase-everywhere-src-$QT.tar.xz"
+cd "qtbase-everywhere-src-$QT"
+
+# Allow window-modal dialog boxes in Tahoe, it's not a problem for us.
+patch -p1 < "$SCRIPTDIR/patches/qtbase-window-modal-tahoe.patch"
+
+cmake -B build "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_dbus=OFF -DFEATURE_framework=OFF -DFEATURE_icu=OFF -DFEATURE_opengl=OFF -DFEATURE_sql=OFF -DFEATURE_gssapi=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF
+make -C build "-j$NPROCS"
+make -C build install
+cd ..
+rm -fr "qtbase-everywhere-src-$QT"
+
+echo "Building Qt Image Formats..."
+rm -fr "qtimageformats-everywhere-src-$QT"
+tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
+cd "qtimageformats-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_webp=ON -DFEATURE_system_webp=OFF
+make "-j$NPROCS"
+make install
+cd ../..
+rm -fr "qtimageformats-everywhere-src-$QT"
+
+echo "Building Qt Tools..."
+rm -fr "qttools-everywhere-src-$QT"
+tar xf "qttools-everywhere-src-$QT.tar.xz"
+cd "qttools-everywhere-src-$QT"
+patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_linguist=ON -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
+make "-j$NPROCS"
+make install
+cd ../..
+rm -fr "qttools-everywhere-src-$QT"
+
+echo "Building Qt Translations..."
+rm -fr "qttranslations-everywhere-src-$QT"
+tar xf "qttranslations-everywhere-src-$QT.tar.xz"
+cd "qttranslations-everywhere-src-$QT"
+mkdir build
+cd build
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}"
+make "-j$NPROCS"
+make install
+cd ../..
+rm -fr "qttranslations-everywhere-src-$QT"
+
 echo "Building libpng..."
 rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
@@ -320,57 +371,6 @@ make -C build "-j$NPROCS"
 make -C build install
 cd ..
 rm -fr "sqlite-amalgamation-$SQLITE"
-
-echo "Building Qt Base..."
-rm -fr "qtbase-everywhere-src-$QT"
-tar xf "qtbase-everywhere-src-$QT.tar.xz"
-cd "qtbase-everywhere-src-$QT"
-
-# Allow window-modal dialog boxes in Tahoe, it's not a problem for us.
-patch -p1 < "$SCRIPTDIR/patches/qtbase-window-modal-tahoe.patch"
-
-cmake -B build "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_dbus=OFF -DFEATURE_framework=OFF -DFEATURE_icu=OFF -DFEATURE_opengl=OFF -DFEATURE_sql=OFF -DFEATURE_gssapi=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF
-make -C build "-j$NPROCS"
-make -C build install
-cd ..
-rm -fr "qtbase-everywhere-src-$QT"
-
-echo "Building Qt Image Formats..."
-rm -fr "qtimageformats-everywhere-src-$QT"
-tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
-cd "qtimageformats-everywhere-src-$QT"
-mkdir build
-cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_webp=ON -DFEATURE_system_webp=OFF
-make "-j$NPROCS"
-make install
-cd ../..
-rm -fr "qtimageformats-everywhere-src-$QT"
-
-echo "Building Qt Tools..."
-rm -fr "qttools-everywhere-src-$QT"
-tar xf "qttools-everywhere-src-$QT.tar.xz"
-cd "qttools-everywhere-src-$QT"
-patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
-mkdir build
-cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}" -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_linguist=ON -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
-make "-j$NPROCS"
-make install
-cd ../..
-rm -fr "qttools-everywhere-src-$QT"
-
-echo "Building Qt Translations..."
-rm -fr "qttranslations-everywhere-src-$QT"
-tar xf "qttranslations-everywhere-src-$QT.tar.xz"
-cd "qttranslations-everywhere-src-$QT"
-mkdir build
-cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON[@]}" "${CMAKE_COMMON_QT[@]}"
-make "-j$NPROCS"
-make install
-cd ../..
-rm -fr "qttranslations-everywhere-src-$QT"
 
 echo "Building shaderc..."
 rm -fr "shaderc-$SHADERC_COMMIT"

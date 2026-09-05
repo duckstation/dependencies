@@ -126,16 +126,6 @@ ninja -C build install
 cd ..
 rm -fr "zlib-ng-$ZLIBNG"
 
-echo "Building libbacktrace..."
-rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
-tar xf "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz"
-cd "libbacktrace-$LIBBACKTRACE_COMMIT"
-CFLAGS="-fmacro-prefix-map=\"${PWD}\"=. -ffile-prefix-map=\"${PWD}\"=." ./configure --prefix="$INSTALLDIR" --libdir="$INSTALLDIR/lib" --with-pic
-make
-make install
-cd ..
-rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
-
 echo "Building libpng..."
 rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
@@ -147,27 +137,6 @@ ninja -C build install
 cd ..
 rm -fr "libpng-$LIBPNG"
 
-echo "Building libjpeg..."
-rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
-tar xf "libjpeg-turbo-$LIBJPEGTURBO.tar.gz"
-cd "libjpeg-turbo-$LIBJPEGTURBO"
-patch -p1 < "$SCRIPTDIR/patches/libjpeg-turbo-disable-rpath.patch"
-cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build -G Ninja
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
-
-echo "Building Zstandard..."
-rm -fr "zstd-$ZSTD"
-tar xf "zstd-$ZSTD.tar.gz"
-cd "zstd-$ZSTD"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build -G Ninja build/cmake
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "zstd-$ZSTD"
-
 echo "Building Brotli..."
 rm -fr "brotli-$BROTLI"
 tar xf "brotli-$BROTLI.tar.gz"
@@ -176,33 +145,6 @@ cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_
 ninja -C build install
 cd ..
 rm -fr "brotli-$BROTLI"
-
-echo "Building WebP..."
-rm -fr "libwebp-$LIBWEBP"
-tar xf "libwebp-$LIBWEBP.tar.gz"
-cd "libwebp-$LIBWEBP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
-  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "libwebp-$LIBWEBP"
-
-echo "Building libzip..."
-rm -fr "libzip-$LIBZIP"
-tar xf "libzip-$LIBZIP.tar.gz"
-cd "libzip-$LIBZIP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
-  -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
-  -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
-  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "libzip-$LIBZIP"
 
 echo "Building FreeType..."
 rm -fr "freetype-$FREETYPE"
@@ -227,30 +169,6 @@ ninja -C build install
 cd ..
 rm -fr "harfbuzz-$HARFBUZZ"
 
-echo "Building SDL..."
-rm -fr "SDL-release-$SDL3"
-tar xf "SDL-release-$SDL3.tar.gz"
-cd "SDL-release-$SDL3"
-cmake -B build "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -G Ninja
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "SDL-release-$SDL3"
-
-echo "Building sqlite..."
-rm -fr "sqlite-amalgamation-$SQLITE"
-unzip "sqlite-amalgamation-$SQLITE.zip"
-cd "sqlite-amalgamation-$SQLITE"
-patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
-sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
-cmake --build build --parallel
-ninja -C build install
-cd ..
-rm -fr "sqlite-amalgamation-$SQLITE"
-
 # Couple notes:
 # -fontconfig is needed otherwise Qt Widgets render only boxes.
 # -qt-doubleconversion avoids a dependency on libdouble-conversion.
@@ -263,7 +181,7 @@ tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -release -dbus-linked -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -release -dbus-linked -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=ON -DFEATURE_freetype=ON -DFEATURE_system_freetype=ON -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -318,6 +236,88 @@ cmake --build . --parallel
 ninja install
 cd ../../
 rm -fr "qttranslations-everywhere-src-$QT"
+
+echo "Building libbacktrace..."
+rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
+tar xf "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz"
+cd "libbacktrace-$LIBBACKTRACE_COMMIT"
+CFLAGS="-fmacro-prefix-map=\"${PWD}\"=. -ffile-prefix-map=\"${PWD}\"=." ./configure --prefix="$INSTALLDIR" --libdir="$INSTALLDIR/lib" --with-pic
+make
+make install
+cd ..
+rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
+
+echo "Building libjpeg..."
+rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
+tar xf "libjpeg-turbo-$LIBJPEGTURBO.tar.gz"
+cd "libjpeg-turbo-$LIBJPEGTURBO"
+patch -p1 < "$SCRIPTDIR/patches/libjpeg-turbo-disable-rpath.patch"
+cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build -G Ninja
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
+
+echo "Building Zstandard..."
+rm -fr "zstd-$ZSTD"
+tar xf "zstd-$ZSTD.tar.gz"
+cd "zstd-$ZSTD"
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build -G Ninja build/cmake
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "zstd-$ZSTD"
+
+echo "Building WebP..."
+rm -fr "libwebp-$LIBWEBP"
+tar xf "libwebp-$LIBWEBP.tar.gz"
+cd "libwebp-$LIBWEBP"
+cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
+  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "libwebp-$LIBWEBP"
+
+echo "Building libzip..."
+rm -fr "libzip-$LIBZIP"
+tar xf "libzip-$LIBZIP.tar.gz"
+cd "libzip-$LIBZIP"
+cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+  -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
+  -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
+  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF \
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "libzip-$LIBZIP"
+
+echo "Building SDL..."
+rm -fr "SDL-release-$SDL3"
+tar xf "SDL-release-$SDL3.tar.gz"
+cd "SDL-release-$SDL3"
+cmake -B build "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -G Ninja
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "SDL-release-$SDL3"
+
+echo "Building sqlite..."
+rm -fr "sqlite-amalgamation-$SQLITE"
+unzip "sqlite-amalgamation-$SQLITE.zip"
+cd "sqlite-amalgamation-$SQLITE"
+patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
+sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
+cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+  -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
+cmake --build build --parallel
+ninja -C build install
+cd ..
+rm -fr "sqlite-amalgamation-$SQLITE"
 
 echo "Building shaderc..."
 rm -fr "shaderc-$SHADERC_COMMIT"

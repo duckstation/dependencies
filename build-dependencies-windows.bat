@@ -146,6 +146,95 @@ if %DEBUG%==1 (
 
 set FORCEPDB=-DCMAKE_EXE_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_MODULE_LINKER_FLAGS_RELEASE="/DEBUG"
 
+if "%QTBINARIES%"=="0" goto buildqtsource
+
+set "QTPACKAGEVERSION=%QT:.=%"
+if "%ARCH%"=="x64" (
+  set "QTPLATFORM=msvc2022_64"
+  set "QTPACKAGESUFFIX=win64_msvc2022_64"
+) else (
+  set "QTPLATFORM=msvc2022_arm64"
+  set "QTPACKAGESUFFIX=win64_msvc2022_arm64_cross_compiled"
+)
+
+echo Installing pre-built Qt binaries...
+set "QTBINARYROOT=%BUILDDIR%\qt-binaries-%ARCH%"
+rmdir /S /Q "%QTBINARYROOT%"
+setlocal DisableDelayedExpansion
+rem Qt 6 uses the same binary artifacts for LGPLv3 and GPLv3. Do not select any GPL-only add-on packages.
+rem Selecting the add-on parent and base together automatically installs the virtual component for this platform.
+"%BUILDDIR%\qt-online-installer-windows-x64-%QTINSTALLER%.exe" --root "%QTBINARYROOT%" --type package --accept-licenses --accept-obligations --default-answer --confirm-command --no-default-installations --no-force-installations --auto-answer telemetry-question=No,AssociateCommonFiletypes=No --email "%QT_INSTALLER_EMAIL%" --pw "%QT_INSTALLER_PASSWORD%" install "qt.qt6.%QTPACKAGEVERSION%.%QTPACKAGESUFFIX%" "qt.qt6.%QTPACKAGEVERSION%.addons.qtimageformats" || goto error
+endlocal
+
+if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\bin\Qt6Core.dll" (
+  echo Pre-built Qt installation was not found in the expected location.
+  goto error
+)
+if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\plugins\imageformats\qwebp.dll" (
+  echo Pre-built Qt Image Formats plugins were not found in the expected location.
+  goto error
+)
+xcopy "%QTBINARYROOT%\%QT%\%QTPLATFORM%\*" "%INSTALLDIR%\" /E /H /I /Y || goto error
+rmdir /S /Q "%QTBINARYROOT%"
+goto qtbuilddone
+
+:buildqtsource
+
+if %DEBUG%==1 (
+  set QTBUILDSPEC=-DCMAKE_CONFIGURATION_TYPES="Release;Debug" -G "Ninja Multi-Config"
+) else (
+  set QTBUILDSPEC=-DCMAKE_BUILD_TYPE=Release -G Ninja
+)
+
+echo Building Qt base...
+rmdir /S /Q "qtbase-everywhere-src-%QT%"
+%SEVENZIP% x "qtbase-everywhere-src-%QT%.zip" || goto error
+cd "qtbase-everywhere-src-%QT%" || goto error
+cmake -B build %CMAKEARCH% -DFEATURE_sql=OFF -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" %QTHOSTPATH% %FORCEPDB% -DQT_GENERATE_SBOM=ON -DINPUT_ssl=yes -DINPUT_openssl=no -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF %QTBUILDSPEC% || goto error
+cmake --build build --parallel || goto error
+ninja -C build install || goto error
+cd .. || goto error
+rmdir /S /Q "qtbase-everywhere-src-%QT%"
+
+echo Building Qt Image Formats...
+rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
+%SEVENZIP% x "qtimageformats-everywhere-src-%QT%.zip" || goto error
+cd "qtimageformats-everywhere-src-%QT%" || goto error
+mkdir build || goto error
+cd build || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_webp=ON -DFEATURE_system_webp=OFF || goto error
+cmake --build . --parallel || goto error
+ninja install || goto error
+cd ..\.. || goto error
+rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
+
+echo Building Qt Tools...
+rmdir /S /Q "qttools-everywhere-src-%QT%"
+%SEVENZIP% x "qttools-everywhere-src-%QT%.zip" || goto error
+cd "qttools-everywhere-src-%QT%" || goto error
+%PATCH% -p1 < "%SCRIPTDIR%\patches\qttools-linguist-without-quick.patch" || goto error
+mkdir build || goto error
+cd build || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=%QTDESIGNER% -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF || goto error
+cmake --build . --parallel || goto error
+ninja install || goto error
+cd ..\.. || goto error
+rmdir /S /Q "qttools-everywhere-src-%QT%"
+
+echo Building Qt Translations...
+rmdir /S /Q "qttranslations-everywhere-src-%QT%"
+%SEVENZIP% x "qttranslations-everywhere-src-%QT%.zip" || goto error
+cd "qttranslations-everywhere-src-%QT%" || goto error
+mkdir build || goto error
+cd build || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB%  -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON|| goto error
+cmake --build . --parallel || goto error
+ninja install || goto error
+cd ..\.. || goto error
+rmdir /S /Q "qttranslations-everywhere-src-%QT%"
+
+:qtbuilddone
+
 echo Building zlib-ng...
 rmdir /S /Q "zlib-ng-%ZLIBNG%"
 tar -xf "zlib-ng-%ZLIBNG%.tar.gz" || goto error
@@ -262,95 +351,6 @@ cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
 rmdir /S /Q "sqlite-amalgamation-%SQLITE%"
-
-if "%QTBINARIES%"=="0" goto buildqtsource
-
-set "QTPACKAGEVERSION=%QT:.=%"
-if "%ARCH%"=="x64" (
-  set "QTPLATFORM=msvc2022_64"
-  set "QTPACKAGESUFFIX=win64_msvc2022_64"
-) else (
-  set "QTPLATFORM=msvc2022_arm64"
-  set "QTPACKAGESUFFIX=win64_msvc2022_arm64_cross_compiled"
-)
-
-echo Installing pre-built Qt binaries...
-set "QTBINARYROOT=%BUILDDIR%\qt-binaries-%ARCH%"
-rmdir /S /Q "%QTBINARYROOT%"
-setlocal DisableDelayedExpansion
-rem Qt 6 uses the same binary artifacts for LGPLv3 and GPLv3. Do not select any GPL-only add-on packages.
-rem Selecting the add-on parent and base together automatically installs the virtual component for this platform.
-"%BUILDDIR%\qt-online-installer-windows-x64-%QTINSTALLER%.exe" --root "%QTBINARYROOT%" --type package --accept-licenses --accept-obligations --default-answer --confirm-command --no-default-installations --no-force-installations --auto-answer telemetry-question=No,AssociateCommonFiletypes=No --email "%QT_INSTALLER_EMAIL%" --pw "%QT_INSTALLER_PASSWORD%" install "qt.qt6.%QTPACKAGEVERSION%.%QTPACKAGESUFFIX%" "qt.qt6.%QTPACKAGEVERSION%.addons.qtimageformats" || goto error
-endlocal
-
-if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\bin\Qt6Core.dll" (
-  echo Pre-built Qt installation was not found in the expected location.
-  goto error
-)
-if not exist "%QTBINARYROOT%\%QT%\%QTPLATFORM%\plugins\imageformats\qwebp.dll" (
-  echo Pre-built Qt Image Formats plugins were not found in the expected location.
-  goto error
-)
-xcopy "%QTBINARYROOT%\%QT%\%QTPLATFORM%\*" "%INSTALLDIR%\" /E /H /I /Y || goto error
-rmdir /S /Q "%QTBINARYROOT%"
-goto qtbuilddone
-
-:buildqtsource
-
-if %DEBUG%==1 (
-  set QTBUILDSPEC=-DCMAKE_CONFIGURATION_TYPES="Release;Debug" -G "Ninja Multi-Config"
-) else (
-  set QTBUILDSPEC=-DCMAKE_BUILD_TYPE=Release -G Ninja
-)
-
-echo Building Qt base...
-rmdir /S /Q "qtbase-everywhere-src-%QT%"
-%SEVENZIP% x "qtbase-everywhere-src-%QT%.zip" || goto error
-cd "qtbase-everywhere-src-%QT%" || goto error
-cmake -B build %CMAKEARCH% -DFEATURE_sql=OFF -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" %QTHOSTPATH% %FORCEPDB% -DQT_GENERATE_SBOM=ON -DINPUT_ssl=yes -DINPUT_openssl=no -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF %QTBUILDSPEC% || goto error
-cmake --build build --parallel || goto error
-ninja -C build install || goto error
-cd .. || goto error
-rmdir /S /Q "qtbase-everywhere-src-%QT%"
-
-echo Building Qt Image Formats...
-rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
-%SEVENZIP% x "qtimageformats-everywhere-src-%QT%.zip" || goto error
-cd "qtimageformats-everywhere-src-%QT%" || goto error
-mkdir build || goto error
-cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_webp=ON -DFEATURE_system_webp=OFF || goto error
-cmake --build . --parallel || goto error
-ninja install || goto error
-cd ..\.. || goto error
-rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
-
-echo Building Qt Tools...
-rmdir /S /Q "qttools-everywhere-src-%QT%"
-%SEVENZIP% x "qttools-everywhere-src-%QT%.zip" || goto error
-cd "qttools-everywhere-src-%QT%" || goto error
-%PATCH% -p1 < "%SCRIPTDIR%\patches\qttools-linguist-without-quick.patch" || goto error
-mkdir build || goto error
-cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=%QTDESIGNER% -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF || goto error
-cmake --build . --parallel || goto error
-ninja install || goto error
-cd ..\.. || goto error
-rmdir /S /Q "qttools-everywhere-src-%QT%"
-
-echo Building Qt Translations...
-rmdir /S /Q "qttranslations-everywhere-src-%QT%"
-%SEVENZIP% x "qttranslations-everywhere-src-%QT%.zip" || goto error
-cd "qttranslations-everywhere-src-%QT%" || goto error
-mkdir build || goto error
-cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB%  -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON|| goto error
-cmake --build . --parallel || goto error
-ninja install || goto error
-cd ..\.. || goto error
-rmdir /S /Q "qttranslations-everywhere-src-%QT%"
-
-:qtbuilddone
 
 echo Building shaderc...
 rmdir /S /Q "shaderc-%SHADERC_COMMIT%"
