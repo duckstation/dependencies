@@ -313,7 +313,7 @@ tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=OFF -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -325,7 +325,7 @@ tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
 cd "qtimageformats-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=OFF -DFEATURE_system_webp=ON
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_system_webp=ON
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -337,7 +337,7 @@ tar xf "qtwayland-everywhere-src-$QT.tar.xz"
 cd "qtwayland-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=OFF
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -351,7 +351,7 @@ patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
 patch -p1 < "$SCRIPTDIR/patches/qttools-disable-clang.patch"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=OFF -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -363,7 +363,7 @@ tar xf "qttranslations-everywhere-src-$QT.tar.xz"
 cd "qttranslations-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=OFF
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON
 cmake --build . --parallel
 ninja install
 cd ../../
