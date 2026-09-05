@@ -327,9 +327,6 @@ rm -fr "qtbase-everywhere-src-$QT"
 tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 
-# Stop checkboxes in Fusion theme having such bright outlines.
-patch -p1 < "$SCRIPTDIR/patches/qtbase-fusion-style.patch"
-
 # Allow window-modal dialog boxes in Tahoe, it's not a problem for us.
 patch -p1 < "$SCRIPTDIR/patches/qtbase-window-modal-tahoe.patch"
 
