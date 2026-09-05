@@ -263,7 +263,7 @@ tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -release -dbus-linked -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_system_png=ON -DFEATURE_system_jpeg=ON -DFEATURE_system_zlib=ON -DFEATURE_system_freetype=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -release -dbus-linked -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -275,7 +275,7 @@ tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
 cd "qtimageformats-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_system_webp=ON
+"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_webp=ON -DFEATURE_system_webp=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
