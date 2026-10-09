@@ -3,7 +3,7 @@
 set -e
 
 if [ "$#" -lt 2 ]; then
-    echo "Syntax: $0 <cross architecture> <output directory> [-skip-download] [-skip-cleanup] [-only-download] <output directory>"
+    echo "Syntax: $0 [-skip-download] [-skip-cleanup] [-only-download] <cross architecture> <output directory>"
     exit 1
 fi
 
@@ -36,7 +36,7 @@ INSTALLDIR="$2"
 if [ "${INSTALLDIR:0:1}" != "/" ]; then
   INSTALLDIR="$PWD/$INSTALLDIR"
 fi
-TOOLCHAINFILE="$NDK_HOME/build\cmake/android.toolchain.cmake"
+TOOLCHAINFILE="$NDK_HOME/build/cmake/android.toolchain.cmake"
 
 # Pin embedded timestamps to the commit date, unless the caller has already provided a date.
 if [ -z "$SOURCE_DATE_EPOCH" ]; then
@@ -70,59 +70,14 @@ CMAKE_COMMON=(
 
 source "$SCRIPTDIR/versions"
 
-mkdir -p deps-build
-cd deps-build
-
-if [[ "$SKIP_DOWNLOAD" != true && ! -f "brotli-$BROTLI.tar.gz" ]]; then
-  curl -C - -L \
-    -o "brotli-$BROTLI.tar.gz" "https://github.com/google/brotli/archive/refs/tags/v$BROTLI.tar.gz" \
-    -o "freetype-$FREETYPE.tar.gz" "https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE/freetype-$FREETYPE.tar.gz/download" \
-    -o "harfbuzz-$HARFBUZZ.tar.gz" "https://github.com/harfbuzz/harfbuzz/archive/refs/tags/$HARFBUZZ.tar.gz" \
-    -O "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/$LIBJPEGTURBO/libjpeg-turbo-$LIBJPEGTURBO.tar.gz" \
-    -O "https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG/libpng-$LIBPNG.tar.gz" \
-    -O "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-$LIBWEBP.tar.gz" \
-    -O "https://github.com/nih-at/libzip/releases/download/v$LIBZIP/libzip-$LIBZIP.tar.gz" \
-    -O "https://sqlite.org/2026/sqlite-amalgamation-$SQLITE.zip" \
-    -o "zlib-ng-$ZLIBNG.tar.gz" "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/$ZLIBNG.tar.gz" \
-    -O "https://github.com/facebook/zstd/releases/download/v$ZSTD/zstd-$ZSTD.tar.gz" \
-    -o "cpuinfo-$CPUINFO_COMMIT.tar.gz" "https://github.com/stenzek/cpuinfo/archive/$CPUINFO_COMMIT.tar.gz" \
-    -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
-    -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
-    -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
-fi
-
-cat > SHASUMS <<EOF
-$BROTLI_GZ_HASH  brotli-$BROTLI.tar.gz
-$FREETYPE_GZ_HASH  freetype-$FREETYPE.tar.gz
-$HARFBUZZ_GZ_HASH  harfbuzz-$HARFBUZZ.tar.gz
-$LIBJPEGTURBO_GZ_HASH  libjpeg-turbo-$LIBJPEGTURBO.tar.gz
-$LIBPNG_GZ_HASH  libpng-$LIBPNG.tar.gz
-$LIBWEBP_GZ_HASH  libwebp-$LIBWEBP.tar.gz
-$LIBZIP_GZ_HASH  libzip-$LIBZIP.tar.gz
-$SQLITE_ZIP_HASH  sqlite-amalgamation-$SQLITE.zip
-$ZLIBNG_GZ_HASH  zlib-ng-$ZLIBNG.tar.gz
-$ZSTD_GZ_HASH  zstd-$ZSTD.tar.gz
-$CPUINFO_GZ_HASH  cpuinfo-$CPUINFO_COMMIT.tar.gz
-$PLUTOSVG_GZ_HASH  plutosvg-$PLUTOSVG_COMMIT.tar.gz
-$SHADERC_GZ_HASH  shaderc-$SHADERC_COMMIT.tar.gz
-$SOUNDTOUCH_GZ_HASH  soundtouch-$SOUNDTOUCH_COMMIT.tar.gz
-EOF
-
-shasum -a 256 --check SHASUMS
-
-# Have to clone with git, because it does version detection.
-if [[ "$SKIP_DOWNLOAD" != true && ! -d "SPIRV-Cross" ]]; then
-  git clone https://github.com/KhronosGroup/SPIRV-Cross/ -b $SPIRV_CROSS_TAG --depth 1
-  if [ "$(git --git-dir=SPIRV-Cross/.git rev-parse HEAD)" != "$SPIRV_CROSS_SHA" ]; then
-    echo "SPIRV-Cross version mismatch, expected $SPIRV_CROSS_SHA, got $(git rev-parse HEAD)"
-    exit 1
-  fi
-fi
-
-# Only downloading sources?
+# Download and verify the sources.
+"$SCRIPTDIR/download-sources.sh" ${SKIP_DOWNLOAD:+-skip-download} android
 if [ "$ONLY_DOWNLOAD" == true ]; then
   exit 0
 fi
+
+mkdir -p deps-build
+cd deps-build
 
 # Build zlib first because of the things that depend on it.
 # Disabled because it currently causes crashes on armhf.

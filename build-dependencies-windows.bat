@@ -144,7 +144,10 @@ if %DEBUG%==1 (
   echo Building release libraries...
 )
 
-set FORCEPDB=-DCMAKE_EXE_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_MODULE_LINKER_FLAGS_RELEASE="/DEBUG"
+rem Replaces the default linker flags for release builds. /DEBUG turns off /OPT:REF and /OPT:ICF unless
+rem they are explicitly specified, which would otherwise leave unreferenced code in the binaries.
+set LINKFLAGSPDB="/DEBUG /OPT:REF /OPT:ICF"
+set FORCEPDB=-DCMAKE_EXE_LINKER_FLAGS_RELEASE=%LINKFLAGSPDB% -DCMAKE_SHARED_LINKER_FLAGS_RELEASE=%LINKFLAGSPDB% -DCMAKE_MODULE_LINKER_FLAGS_RELEASE=%LINKFLAGSPDB%
 
 rem Pin embedded timestamps to the commit date, unless the caller has already provided a date.
 if not defined SOURCE_DATE_EPOCH for /f %%i in ('git -C "%SCRIPTDIR%" log -1 --format^=%%ct') do set "SOURCE_DATE_EPOCH=%%i"
@@ -297,8 +300,8 @@ rmdir /S /Q "libjpeg-turbo-%LIBJPEGTURBO%"
 echo Building Zstandard...
 rmdir /S /Q "zstd-%ZSTD%"
 tar -xf "zstd-%ZSTD%.tar.gz" --exclude "zstd-%ZSTD%/tests/cli-tests/*" || goto error
-cd "zstd-%ZSTD%"
-cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build build/cmake
+cd "zstd-%ZSTD%" || goto error
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build build/cmake || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -392,7 +395,7 @@ rmdir /S /Q "shaderc-%SHADERC_COMMIT%"
 echo Building SPIRV-Cross...
 cd SPIRV-Cross || goto error
 rmdir /S /Q "build"
-cmake %CMAKE_COMMON_MSVC% -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=ON -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build
+cmake %CMAKE_COMMON_MSVC% -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=ON -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 rmdir /S /Q "build"
@@ -402,7 +405,7 @@ echo Building cpuinfo...
 rmdir /S /Q "cpuinfo-%CPUINFO_COMMIT%"
 tar -xf "cpuinfo-%CPUINFO_COMMIT%.tar.gz" || goto error
 cd "cpuinfo-%CPUINFO_COMMIT%" || goto error
-cmake %CMAKE_COMMON_MSVC% -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build
+cmake %CMAKE_COMMON_MSVC% -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -412,7 +415,7 @@ echo Building discord-rpc...
 rmdir /S /Q "discord-rpc-%DISCORD_RPC_COMMIT%"
 tar -xf "discord-rpc-%DISCORD_RPC_COMMIT%.tar.gz" || goto error
 cd "discord-rpc-%DISCORD_RPC_COMMIT%" || goto error
-cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -B build
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -422,7 +425,7 @@ echo Building plutosvg...
 rmdir /S /Q "plutosvg-%PLUTOSVG_COMMIT%"
 tar -xf "plutosvg-%PLUTOSVG_COMMIT%.tar.gz" || goto error
 cd "plutosvg-%PLUTOSVG_COMMIT%" || goto error
-cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -B build
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error

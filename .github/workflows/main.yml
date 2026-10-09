@@ -17,8 +17,15 @@ jobs:
     name: "📝 Sources"
     runs-on: ubuntu-22.04
     timeout-minutes: 240
+    outputs:
+      source-date-epoch: ${{ steps.epoch.outputs.epoch }}
     steps:
     - uses: actions/checkout@v6
+
+    # Timestamps in the binaries and archives are pinned to the commit date, for reproducible builds.
+    - name: Get Commit Date
+      id: epoch
+      run: echo "epoch=$(git log -1 --format=%ct)" >> "$GITHUB_OUTPUT"
 
     - name: Install Packages
       run: |
@@ -44,6 +51,8 @@ jobs:
     needs: build-sources
     runs-on: windows-2025-vs2026
     timeout-minutes: 240
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
     - uses: actions/checkout@v6
 
@@ -63,6 +72,14 @@ jobs:
 
     - name: Build ARM64 Dependencies
       run: .\build-dependencies-windows.bat arm64 -skip-download -skip-cleanup
+
+    # 7-Zip stores the modification time of each file, and has no option to override it.
+    - name: Normalize Timestamps
+      shell: pwsh
+      run: |
+        $date = [DateTimeOffset]::FromUnixTimeSeconds([long]$env:SOURCE_DATE_EPOCH).UtcDateTime
+        Get-Item windows-x64, windows-arm64 | ForEach-Object { $_.LastWriteTimeUtc = $date }
+        Get-ChildItem windows-x64, windows-arm64 -Recurse -Force | ForEach-Object { $_.LastWriteTimeUtc = $date }
 
     - name: Create Archives
       shell: cmd
@@ -85,6 +102,8 @@ jobs:
     needs: build-sources
     runs-on: windows-2025-vs2026
     timeout-minutes: 240
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
     - uses: actions/checkout@v6
 
@@ -111,6 +130,14 @@ jobs:
         QT_INSTALLER_PASSWORD: ${{ secrets.QT_INSTALLER_PASSWORD }}
       run: .\build-dependencies-windows.bat arm64 -skip-download -skip-cleanup -qt-binaries
 
+    # 7-Zip stores the modification time of each file, and has no option to override it.
+    - name: Normalize Timestamps
+      shell: pwsh
+      run: |
+        $date = [DateTimeOffset]::FromUnixTimeSeconds([long]$env:SOURCE_DATE_EPOCH).UtcDateTime
+        Get-Item windows-x64, windows-arm64 | ForEach-Object { $_.LastWriteTimeUtc = $date }
+        Get-ChildItem windows-x64, windows-arm64 -Recurse -Force | ForEach-Object { $_.LastWriteTimeUtc = $date }
+
     - name: Create Archives
       shell: cmd
       run: |
@@ -132,6 +159,8 @@ jobs:
     needs: build-sources
     runs-on: macos-26
     timeout-minutes: 240
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
     - uses: actions/checkout@v6
 
@@ -150,8 +179,9 @@ jobs:
     - name: Build Dependencies
       run: ./build-dependencies-mac.sh -skip-download macos-universal
 
+    # GNU tar is used, as the system tar is not able to sort or override timestamps.
     - name: Create Archive
-      run: tar -cJf deps-macos-universal.tar.xz macos-universal
+      run: gtar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf deps-macos-universal.tar.xz macos-universal
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v6
@@ -166,6 +196,8 @@ jobs:
     needs: build-sources
     runs-on: ubuntu-22.04
     timeout-minutes: 240
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
     - uses: actions/checkout@v6
 
@@ -188,7 +220,7 @@ jobs:
       run: ./build-ffmpeg-linux.sh linux-x64
 
     - name: Create Archive
-      run: tar -cJf deps-linux-x64.tar.xz linux-x64
+      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf deps-linux-x64.tar.xz linux-x64
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v6
@@ -205,6 +237,8 @@ jobs:
     container:
       image: ghcr.io/duckstation/cross-build-${{ matrix.arch }}:latest
     timeout-minutes: 240
+    env:
+      SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     strategy:
       fail-fast: false
       matrix:
@@ -236,7 +270,7 @@ jobs:
         ./build-dependencies-linux-cross.sh -skip-download "linux-x64" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "linux-cross-${{matrix.arch}}"
 
     - name: Create Archive
-      run: tar -cJf "deps-linux-cross-${{ matrix.arch }}.tar.xz" "linux-cross-${{matrix.arch}}"
+      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf "deps-linux-cross-${{ matrix.arch }}.tar.xz" "linux-cross-${{matrix.arch}}"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v6
