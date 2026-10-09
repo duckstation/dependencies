@@ -57,15 +57,33 @@ if [ "${INSTALLDIR:0:1}" != "/" ]; then
     INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 
+# Pin embedded timestamps to the commit date, unless the caller has already provided a date.
+if [ -z "$SOURCE_DATE_EPOCH" ]; then
+  SOURCE_DATE_EPOCH=$(git -C "$SCRIPTDIR" log -1 --format=%ct 2>/dev/null || true)
+fi
+if [ -n "$SOURCE_DATE_EPOCH" ]; then
+  export SOURCE_DATE_EPOCH
+else
+  echo "WARNING: SOURCE_DATE_EPOCH is not set and could not be determined from git, build will not be reproducible."
+fi
+
 source "$SCRIPTDIR/versions"
 
 mkdir -p deps-build
 cd deps-build
 
+# Rewrite paths in macros and debug info to fixed names, so that the output does not depend
+# on where the build and install directories are located. Helpful for reproducible builds.
+BUILDDIR="$PWD"
+CFLAGS_COMMON="-ffile-prefix-map=$BUILDDIR=. -ffile-prefix-map=$INSTALLDIR=deps"
+
+# Stop ar/ranlib/libtool from writing the current time into static libraries.
+export ZERO_AR_DATE=1
+
 export PKG_CONFIG_PATH="$INSTALLDIR/lib/pkgconfig:$PKG_CONFIG_PATH"
 export LDFLAGS="-L$INSTALLDIR/lib $LDFLAGS"
-export CFLAGS="-I$INSTALLDIR/include $CFLAGS"
-export CXXFLAGS="-I$INSTALLDIR/include $CXXFLAGS"
+export CFLAGS="-I$INSTALLDIR/include $CFLAGS_COMMON $CFLAGS"
+export CXXFLAGS="-I$INSTALLDIR/include $CFLAGS_COMMON $CXXFLAGS"
 LDFLAGS_COMMON="-dead_strip -dead_strip_dylibs"
 CMAKE_COMMON=(
   -DCMAKE_BUILD_TYPE="Release"

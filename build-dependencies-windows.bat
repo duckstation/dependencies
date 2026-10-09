@@ -146,11 +146,32 @@ if %DEBUG%==1 (
 
 set FORCEPDB=-DCMAKE_EXE_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_MODULE_LINKER_FLAGS_RELEASE="/DEBUG"
 
+rem Pin embedded timestamps to the commit date, unless the caller has already provided a date.
+if not defined SOURCE_DATE_EPOCH for /f %%i in ('git -C "%SCRIPTDIR%" log -1 --format^=%%ct') do set "SOURCE_DATE_EPOCH=%%i"
+if not defined SOURCE_DATE_EPOCH echo WARNING: SOURCE_DATE_EPOCH is not set and could not be determined from git, build will not be reproducible.
+
+rem Reproducible builds: strip the build directory from embedded paths, replace timestamps with
+rem content hashes, and only record the file name of the PDB. These are passed through the
+rem environment, which CMake uses to initialize its compiler/linker flags, instead of with -D.
+rem That way they also apply to the Qt modules, and %%_PDB%% survives being passed through call.
+set "CFLAGS_MSVC=/d1trimfile:%BUILDDIR%\ /Brepro"
+set "CFLAGS_CLANGCL=/clang:-ffile-prefix-map=%BUILDDIR%\="
+set "CFLAGS=%CFLAGS_MSVC%"
+set "CXXFLAGS=%CFLAGS_MSVC%"
+set "LDFLAGS=/Brepro /PDBALTPATH:%%_PDB%%"
+
+rem /Brepro is incompatible with incremental linking, which /DEBUG otherwise turns on.
+rem The linker appends _LINK_ to its command line, so this takes precedence in all configurations.
+set "_LINK_=/INCREMENTAL:NO"
+
+rem Static libraries do not have an environment variable. Not used with clang-cl/llvm-lib.
+set CMAKE_REPRO_MSVC=-DCMAKE_STATIC_LINKER_FLAGS=/Brepro
+
 rem Options shared by every CMake project, the Qt modules pick up the rest from qtbase.
 set CMAKE_COMMON=-DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -G Ninja
-set CMAKE_COMMON_MSVC=%CMAKEARCH% %CMAKE_COMMON%
+set CMAKE_COMMON_MSVC=%CMAKEARCH% %CMAKE_COMMON% %CMAKE_REPRO_MSVC%
 set CMAKE_COMMON_CLANGCL=%CLANGCLTOOLCHAIN% %CMAKE_COMMON%
-set CMAKE_COMMON_QT=%FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON
+set CMAKE_COMMON_QT=%FORCEPDB% %CMAKE_REPRO_MSVC% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON
 
 if "%QTBINARIES%"=="0" goto buildqtsource
 
@@ -196,7 +217,7 @@ echo Building Qt base...
 rmdir /S /Q "qtbase-everywhere-src-%QT%"
 %SEVENZIP% x "qtbase-everywhere-src-%QT%.zip" || goto error
 cd "qtbase-everywhere-src-%QT%" || goto error
-cmake -B build %CMAKEARCH% -DFEATURE_sql=OFF -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" %QTHOSTPATH% %FORCEPDB% -DQT_GENERATE_SBOM=ON -DINPUT_ssl=yes -DINPUT_openssl=no -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF %QTBUILDSPEC% || goto error
+cmake -B build %CMAKEARCH% -DFEATURE_sql=OFF -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" %QTHOSTPATH% %FORCEPDB% %CMAKE_REPRO_MSVC% -DQT_GENERATE_SBOM=ON -DINPUT_ssl=yes -DINPUT_openssl=no -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=OFF -DFEATURE_freetype=ON -DFEATURE_system_freetype=OFF -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=OFF -DFEATURE_brotli=OFF %QTBUILDSPEC% || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -411,6 +432,8 @@ echo Building soundtouch...
 rmdir /S /Q "soundtouch-%SOUNDTOUCH_COMMIT%"
 tar -xf "soundtouch-%SOUNDTOUCH_COMMIT%.tar.gz" || goto error
 cd "soundtouch-%SOUNDTOUCH_COMMIT%" || goto error
+set "CFLAGS=%CFLAGS_CLANGCL%"
+set "CXXFLAGS=%CFLAGS_CLANGCL%"
 cmake %CMAKE_COMMON_CLANGCL% -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error

@@ -29,6 +29,20 @@ INSTALLDIR="$1"
 if [ "${INSTALLDIR:0:1}" != "/" ]; then
   INSTALLDIR="$PWD/$INSTALLDIR"
 fi
+# Pin embedded timestamps to the commit date, unless the caller has already provided a date.
+if [ -z "$SOURCE_DATE_EPOCH" ]; then
+  SOURCE_DATE_EPOCH=$(git -C "$SCRIPTDIR" log -1 --format=%ct 2>/dev/null || true)
+fi
+if [ -n "$SOURCE_DATE_EPOCH" ]; then
+  export SOURCE_DATE_EPOCH
+else
+  echo "WARNING: SOURCE_DATE_EPOCH is not set and could not be determined from git, build will not be reproducible."
+fi
+
+# Rewrite paths in macros and debug info to fixed names, so that the output does not depend
+# on where the build and install directories are located. Helpful for reproducible builds.
+BUILDDIR="$PWD/deps-build"
+CFLAGS_COMMON="-ffile-prefix-map=$BUILDDIR=. -ffile-prefix-map=$INSTALLDIR=deps"
 CMAKE_COMMON=(
   -G Ninja
   -DCMAKE_BUILD_TYPE=Release
@@ -37,10 +51,17 @@ CMAKE_COMMON=(
   -DCMAKE_INSTALL_LIBDIR="lib"
   -DCMAKE_INSTALL_RPATH="\$ORIGIN"
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  -DCMAKE_C_FLAGS="$CFLAGS_COMMON"
+  -DCMAKE_CXX_FLAGS="$CFLAGS_COMMON"
+  # Link with the install RPATH. Otherwise CMake rewrites the build RPATH on installation,
+  # which leaves padding that depends on the length of the build directory in the binary.
+  -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 )
 CMAKE_COMMON_QT=(
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  -DCMAKE_C_FLAGS="$CFLAGS_COMMON"
+  -DCMAKE_CXX_FLAGS="$CFLAGS_COMMON"
   -DQT_GENERATE_SBOM=ON
 )
 
@@ -249,7 +270,7 @@ echo "Building libbacktrace..."
 rm -fr "libbacktrace-$LIBBACKTRACE_COMMIT"
 tar xf "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz"
 cd "libbacktrace-$LIBBACKTRACE_COMMIT"
-CFLAGS="-fmacro-prefix-map=\"${PWD}\"=. -ffile-prefix-map=\"${PWD}\"=." ./configure --prefix="$INSTALLDIR" --libdir="$INSTALLDIR/lib" --with-pic
+CFLAGS="$CFLAGS_COMMON" ./configure --prefix="$INSTALLDIR" --libdir="$INSTALLDIR/lib" --with-pic
 make
 make install
 cd ..

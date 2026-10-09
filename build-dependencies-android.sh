@@ -37,6 +37,21 @@ if [ "${INSTALLDIR:0:1}" != "/" ]; then
   INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 TOOLCHAINFILE="$NDK_HOME/build\cmake/android.toolchain.cmake"
+
+# Pin embedded timestamps to the commit date, unless the caller has already provided a date.
+if [ -z "$SOURCE_DATE_EPOCH" ]; then
+  SOURCE_DATE_EPOCH=$(git -C "$SCRIPTDIR" log -1 --format=%ct 2>/dev/null || true)
+fi
+if [ -n "$SOURCE_DATE_EPOCH" ]; then
+  export SOURCE_DATE_EPOCH
+else
+  echo "WARNING: SOURCE_DATE_EPOCH is not set and could not be determined from git, build will not be reproducible."
+fi
+
+# Rewrite paths in macros and debug info to fixed names, so that the output does not depend
+# on where the build and install directories are located. Helpful for reproducible builds.
+BUILDDIR="$PWD/deps-build"
+CFLAGS_COMMON="-ffile-prefix-map=$BUILDDIR=. -ffile-prefix-map=$INSTALLDIR=deps"
 CMAKE_COMMON=(
   -G Ninja
   -DCMAKE_BUILD_TYPE=Release
@@ -46,6 +61,11 @@ CMAKE_COMMON=(
   -DCMAKE_FIND_ROOT_PATH="$INSTALLDIR"
   -DANDROID_ABI="$CROSSARCH"
   -DANDROID_PLATFORM="android-23"
+  -DCMAKE_C_FLAGS="$CFLAGS_COMMON"
+  -DCMAKE_CXX_FLAGS="$CFLAGS_COMMON"
+  # Link with the install RPATH. Otherwise CMake rewrites the build RPATH on installation,
+  # which leaves padding that depends on the length of the build directory in the binary.
+  -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 )
 
 source "$SCRIPTDIR/versions"
