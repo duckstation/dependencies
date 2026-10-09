@@ -120,7 +120,8 @@ if [[ "$SKIP_DOWNLOAD" != true && ! -f "libbacktrace-$LIBBACKTRACE_COMMIT.tar.gz
     -o "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz" "https://github.com/stenzek/discord-rpc/archive/$DISCORD_RPC_COMMIT.tar.gz" \
     -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
     -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
-    -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz"
+    -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz" \
+    -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz"
 fi
 
 cat > SHASUMS <<EOF
@@ -146,6 +147,7 @@ $DISCORD_RPC_GZ_HASH  discord-rpc-$DISCORD_RPC_COMMIT.tar.gz
 $PLUTOSVG_GZ_HASH  plutosvg-$PLUTOSVG_COMMIT.tar.gz
 $SHADERC_GZ_HASH  shaderc-$SHADERC_COMMIT.tar.gz
 $SOUNDTOUCH_GZ_HASH  soundtouch-$SOUNDTOUCH_COMMIT.tar.gz
+$VULKAN_HEADERS_GZ_HASH  Vulkan-Headers-$VULKAN_HEADERS.tar.gz
 EOF
 
 shasum -a 256 --check SHASUMS
@@ -254,15 +256,27 @@ rm -fr "harfbuzz-$HARFBUZZ"
 # -qt-doubleconversion avoids a dependency on libdouble-conversion.
 # ICU avoids pulling in a bunch of large libraries, and hopefully we can get away without it.
 # OpenGL is needed to render window decorations in Wayland, apparently.
+# OpenGL ES is used instead of desktop OpenGL, most ARM devices do not have drivers for the latter,
+# so Qt fails to create contexts. EGL is forced on, as it is the only way to get an ES context.
+# Vulkan only needs the headers at build time, the loader is opened at runtime.
 # dbus-runtime and linked off to avoid a relocation error (different to host.. probably should change that).
 # Brotli is disabled as we static link it, and QtNetwork doesn't link with bbrotlicommon.
+echo "Installing Vulkan-Headers..."
+rm -fr "Vulkan-Headers-$VULKAN_HEADERS"
+tar xf "Vulkan-Headers-$VULKAN_HEADERS.tar.gz"
+cd "Vulkan-Headers-$VULKAN_HEADERS"
+cmake "${CMAKE_COMMON[@]}" -DVULKAN_HEADERS_ENABLE_TESTS=OFF -DVULKAN_HEADERS_ENABLE_MODULE=OFF -B build
+ninja -C build install
+cd ..
+rm -fr "Vulkan-Headers-$VULKAN_HEADERS"
+
 echo "Building Qt Base..."
 rm -fr "qtbase-everywhere-src-$QT"
 tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" "${CMAKE_COMMON_QT[@]}" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=ON -DFEATURE_freetype=ON -DFEATURE_system_freetype=ON -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -extprefix "$INSTALLDIR" -qt-host-path "$HOSTDIR" -release -dbus runtime -fontconfig -qt-doubleconversion -ssl -openssl-runtime -opengl es2 -egl -vulkan -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE" "${CMAKE_COMMON_QT[@]}" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_dbus_linked=OFF -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=ON -DFEATURE_freetype=ON -DFEATURE_system_freetype=ON -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../

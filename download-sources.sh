@@ -38,6 +38,7 @@ curl -C - -L \
   -o "plutosvg-$PLUTOSVG_COMMIT.tar.gz" "https://github.com/stenzek/plutosvg/archive/$PLUTOSVG_COMMIT.tar.gz" \
   -o "shaderc-$SHADERC_COMMIT.tar.gz" "https://github.com/stenzek/shaderc/archive/$SHADERC_COMMIT.tar.gz" \
   -o "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz" "https://github.com/stenzek/soundtouch/archive/$SOUNDTOUCH_COMMIT.tar.gz" \
+  -o "Vulkan-Headers-$VULKAN_HEADERS.tar.gz" "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/v$VULKAN_HEADERS.tar.gz" \
   -o "dxcompiler-$DXCOMPILER_VERSION.zip" "https://www.nuget.org/api/v2/package/Microsoft.Direct3D.DXC/$DXCOMPILER_VERSION"
 
 cat > SHASUMS <<EOF
@@ -70,6 +71,7 @@ $DISCORD_RPC_GZ_HASH  discord-rpc-$DISCORD_RPC_COMMIT.tar.gz
 $PLUTOSVG_GZ_HASH  plutosvg-$PLUTOSVG_COMMIT.tar.gz
 $SHADERC_GZ_HASH  shaderc-$SHADERC_COMMIT.tar.gz
 $SOUNDTOUCH_GZ_HASH  soundtouch-$SOUNDTOUCH_COMMIT.tar.gz
+$VULKAN_HEADERS_GZ_HASH  Vulkan-Headers-$VULKAN_HEADERS.tar.gz
 $DXCOMPILER_ZIP_HASH  dxcompiler-$DXCOMPILER_VERSION.zip
 EOF
 
