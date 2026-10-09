@@ -66,10 +66,11 @@ export PKG_CONFIG_PATH="$INSTALLDIR/lib/pkgconfig:$PKG_CONFIG_PATH"
 export LDFLAGS="-L$INSTALLDIR/lib $LDFLAGS"
 export CFLAGS="-I$INSTALLDIR/include $CFLAGS"
 export CXXFLAGS="-I$INSTALLDIR/include $CXXFLAGS"
+LDFLAGS_COMMON="-dead_strip -dead_strip_dylibs"
 CMAKE_COMMON=(
   -DCMAKE_BUILD_TYPE="Release"
   -DCMAKE_OSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
-  -DCMAKE_SHARED_LINKER_FLAGS="-dead_strip -dead_strip_dylibs"
+  -DCMAKE_SHARED_LINKER_FLAGS="$LDFLAGS_COMMON"
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
   -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
   -DCMAKE_INSTALL_RPATH="@loader_path"
@@ -205,9 +206,10 @@ rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
 cd "libpng-$LIBPNG"
 patch -p1 < "$SCRIPTDIR/patches/libpng-1.6.56-apng.patch"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_FRAMEWORK=OFF -B build
+LIBPNG_OPTIONS=(-DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_FRAMEWORK=OFF)
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" "${LIBPNG_OPTIONS[@]}" -B build
 make -C build "-j$NPROCS"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_ARM_NEON=on -DPNG_FRAMEWORK=OFF -B build-arm64
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" "${LIBPNG_OPTIONS[@]}" -DPNG_ARM_NEON=on -B build-arm64
 make -C build-arm64 "-j$NPROCS"
 merge_binaries $(realpath build) $(realpath build-arm64)
 make -C build install
@@ -218,9 +220,10 @@ echo "Building libjpeg..."
 rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
 tar xf "libjpeg-turbo-$LIBJPEGTURBO.tar.gz"
 cd "libjpeg-turbo-$LIBJPEGTURBO"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build
+LIBJPEG_OPTIONS=(-DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF)
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" "${LIBJPEG_OPTIONS[@]}" -B build
 make -C build "-j$NPROCS"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build-arm64
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" "${LIBJPEG_OPTIONS[@]}" -B build-arm64
 make -C build-arm64 "-j$NPROCS"
 merge_binaries $(realpath build) $(realpath build-arm64)
 make -C build install
@@ -231,9 +234,10 @@ echo "Building Zstandard..."
 rm -fr "zstd-$ZSTD"
 tar xf "zstd-$ZSTD.tar.gz"
 cd "zstd-$ZSTD"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_PROGRAMS=OFF -B build-dir build/cmake
+ZSTD_OPTIONS=(-DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_PROGRAMS=OFF)
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" "${ZSTD_OPTIONS[@]}" -B build-dir build/cmake
 make -C build-dir "-j$NPROCS"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_PROGRAMS=OFF -B build-dir-arm64 build/cmake
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" "${ZSTD_OPTIONS[@]}" -B build-dir-arm64 build/cmake
 make -C build-dir-arm64 "-j$NPROCS"
 merge_binaries $(realpath build-dir) $(realpath build-dir-arm64)
 make -C build-dir install
@@ -254,13 +258,13 @@ echo "Building WebP..."
 rm -fr "libwebp-$LIBWEBP"
 tar xf "libwebp-$LIBWEBP.tar.gz"
 cd "libwebp-$LIBWEBP"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -B build \
-  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
+LIBWEBP_OPTIONS=(
+  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF
   -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
+)
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" "${LIBWEBP_OPTIONS[@]}" -B build
 make -C build "-j$NPROCS"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -B build-arm64 \
-  -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" "${LIBWEBP_OPTIONS[@]}" -B build-arm64
 make -C build-arm64 "-j$NPROCS"
 # Run CMake's install and install_name_tool steps on each thin build before merging. A fat dylib assembled in the build
 # tree has a different build RPATH in each slice, which CMake cannot remove correctly during installation.
@@ -320,28 +324,27 @@ echo "Building FFmpeg..."
 rm -fr "ffmpeg-$FFMPEG_VERSION"
 tar xf "ffmpeg-$FFMPEG_VERSION.tar.xz"
 cd "ffmpeg-$FFMPEG_VERSION"
+FFMPEG_OPTIONS=(
+  --disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared
+  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox
+  --enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox'
+  --enable-muxer='avi,matroska,mov,mp3,mp4,wav'
+  --enable-protocol='file'
+)
 mkdir build
 cd build
-LDFLAGS="-dead_strip -dead_strip_dylibs $LDFLAGS" \
+LDFLAGS="$LDFLAGS_COMMON $LDFLAGS" \
   ../configure --prefix="$INSTALLDIR" \
   --enable-cross-compile --arch=x86_64 --cc='clang -arch x86_64' --cxx='clang++ -arch x86_64' \
-  --disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
-  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
-  --enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
-  --enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
-  --enable-protocol='file'
+  "${FFMPEG_OPTIONS[@]}"
 make "-j$NPROCS"
 cd ..
 mkdir build-arm64
 cd build-arm64
-LDFLAGS="-dead_strip -dead_strip_dylibs $LDFLAGS" \
+LDFLAGS="$LDFLAGS_COMMON $LDFLAGS" \
   ../configure --prefix="$INSTALLDIR" \
   --enable-cross-compile --arch=arm64 --cc='clang -arch arm64' --cxx='clang++ -arch arm64' \
-  --disable-x86asm --disable-all --disable-autodetect --disable-static --enable-shared \
-  --enable-avcodec --enable-avformat --enable-avutil --enable-swresample --enable-swscale --enable-audiotoolbox --enable-videotoolbox \
-  --enable-encoder='ffv1,qtrle,pcm_s16be,pcm_s16le,*_at,*_videotoolbox' \
-  --enable-muxer='avi,matroska,mov,mp3,mp4,wav' \
-  --enable-protocol='file'
+  "${FFMPEG_OPTIONS[@]}"
 make "-j$NPROCS"
 cd ..
 merge_binaries $(realpath build) $(realpath build-arm64)
@@ -396,9 +399,10 @@ echo "Building cpuinfo..."
 rm -fr "cpuinfo-$CPUINFO_COMMIT"
 tar xf "cpuinfo-$CPUINFO_COMMIT.tar.gz"
 cd "cpuinfo-$CPUINFO_COMMIT"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build
+CPUINFO_OPTIONS=(-DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON)
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_X64" "${CPUINFO_OPTIONS[@]}" -B build
 make -C build "-j$NPROCS"
-cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build-arm64
+cmake "${CMAKE_COMMON[@]}" "$CMAKE_ARCH_ARM64" "${CPUINFO_OPTIONS[@]}" -B build-arm64
 make -C build-arm64 "-j$NPROCS"
 merge_binaries $(realpath build) $(realpath build-arm64)
 make -C build install

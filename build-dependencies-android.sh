@@ -38,6 +38,7 @@ if [ "${INSTALLDIR:0:1}" != "/" ]; then
 fi
 TOOLCHAINFILE="$NDK_HOME/build\cmake/android.toolchain.cmake"
 CMAKE_COMMON=(
+  -G Ninja
   -DCMAKE_BUILD_TYPE=Release
   -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAINFILE"
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
@@ -109,7 +110,7 @@ echo "Building zlib-ng..."
 rm -fr "zlib-ng-$ZLIBNG"
 tar xf "zlib-ng-$ZLIBNG.tar.gz"
 cd "zlib-ng-$ZLIBNG"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -119,7 +120,7 @@ rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
 cd "libpng-$LIBPNG"
 patch -p1 < "$SCRIPTDIR/patches/libpng-1.6.56-apng.patch"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -130,7 +131,7 @@ rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
 tar xf "libjpeg-turbo-$LIBJPEGTURBO.tar.gz"
 cd "libjpeg-turbo-$LIBJPEGTURBO"
 patch -p1 < "$SCRIPTDIR/patches/libjpeg-turbo-disable-rpath.patch"
-cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -140,7 +141,7 @@ echo "Building Zstandard..."
 rm -fr "zstd-$ZSTD"
 tar -xf "zstd-$ZSTD.tar.gz" --exclude "zstd-$ZSTD/tests/cli-tests/*"
 cd "zstd-$ZSTD"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build -G Ninja build/cmake
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build build/cmake
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -150,7 +151,7 @@ echo "Building Brotli..."
 rm -fr "brotli-$BROTLI"
 tar xf "brotli-$BROTLI.tar.gz"
 cd "brotli-$BROTLI"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=OFF -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=OFF -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON -B build
 ninja -C build install
 cd ..
 rm -fr "brotli-$BROTLI"
@@ -159,7 +160,7 @@ echo "Building WebP..."
 rm -fr "libwebp-$LIBWEBP"
 tar xf "libwebp-$LIBWEBP.tar.gz"
 cd "libwebp-$LIBWEBP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+cmake "${CMAKE_COMMON[@]}" -B build \
   -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
   -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON \
   -DCMAKE_INSTALL_RPATH="\$ORIGIN"
@@ -172,7 +173,7 @@ echo "Building libzip..."
 rm -fr "libzip-$LIBZIP"
 tar xf "libzip-$LIBZIP.tar.gz"
 cd "libzip-$LIBZIP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+cmake "${CMAKE_COMMON[@]}" -B build \
   -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
   -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
   -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF \
@@ -188,7 +189,7 @@ tar xf "freetype-$FREETYPE.tar.gz"
 cd "freetype-$FREETYPE"
 patch -p1 < "$SCRIPTDIR/patches/freetype-harfbuzz-soname.patch"
 patch -p1 < "$SCRIPTDIR/patches/freetype-static-brotli.patch"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DFT_REQUIRE_ZLIB=ON -DFT_REQUIRE_PNG=ON -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DFT_REQUIRE_ZLIB=ON -DFT_REQUIRE_PNG=ON -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -198,7 +199,7 @@ echo "Building HarfBuzz..."
 rm -fr "harfbuzz-$HARFBUZZ"
 tar xf "harfbuzz-$HARFBUZZ.tar.gz"
 cd "harfbuzz-$HARFBUZZ"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -210,7 +211,7 @@ unzip "sqlite-amalgamation-$SQLITE.zip"
 cd "sqlite-amalgamation-$SQLITE"
 patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
 sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
-cmake "${CMAKE_COMMON[@]}" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DBUILD_SHELL=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DBUILD_SHELL=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -220,7 +221,7 @@ echo "Building shaderc..."
 rm -fr "shaderc-$SHADERC_COMMIT"
 tar xf "shaderc-$SHADERC_COMMIT.tar.gz"
 cd "shaderc-$SHADERC_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -229,7 +230,7 @@ rm -fr "shaderc-$SHADERC_COMMIT"
 echo "Building SPIRV-Cross..."
 cd SPIRV-Cross
 rm -fr build
-cmake "${CMAKE_COMMON[@]}" -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build
 cmake --build build --parallel
 ninja -C build install
 rm -fr build
@@ -239,7 +240,7 @@ echo "Building cpuinfo..."
 rm -fr "cpuinfo-$CPUINFO_COMMIT"
 tar xf "cpuinfo-$CPUINFO_COMMIT.tar.gz"
 cd "cpuinfo-$CPUINFO_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -249,7 +250,7 @@ echo "Building plutosvg..."
 rm -fr "plutosvg-$PLUTOSVG_COMMIT"
 tar xf "plutosvg-$PLUTOSVG_COMMIT.tar.gz"
 cd "plutosvg-$PLUTOSVG_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_RPATH="\$ORIGIN" -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_RPATH="\$ORIGIN" -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -259,7 +260,7 @@ echo "Building soundtouch..."
 rm -fr "soundtouch-$SOUNDTOUCH_COMMIT"
 tar xf "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz"
 cd "soundtouch-$SOUNDTOUCH_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..

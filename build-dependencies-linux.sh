@@ -30,11 +30,18 @@ if [ "${INSTALLDIR:0:1}" != "/" ]; then
   INSTALLDIR="$PWD/$INSTALLDIR"
 fi
 CMAKE_COMMON=(
+  -G Ninja
   -DCMAKE_BUILD_TYPE=Release
   -DCMAKE_PREFIX_PATH="$INSTALLDIR"
   -DCMAKE_INSTALL_PREFIX="$INSTALLDIR"
   -DCMAKE_INSTALL_LIBDIR="lib"
   -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+)
+CMAKE_COMMON_QT=(
+  -DCMAKE_PREFIX_PATH="$INSTALLDIR"
+  -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+  -DQT_GENERATE_SBOM=ON
 )
 
 source "$SCRIPTDIR/versions"
@@ -121,7 +128,7 @@ echo "Building zlib-ng..."
 rm -fr "zlib-ng-$ZLIBNG"
 tar xf "zlib-ng-$ZLIBNG.tar.gz"
 cd "zlib-ng-$ZLIBNG"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -132,7 +139,7 @@ rm -fr "libpng-$LIBPNG"
 tar xf "libpng-$LIBPNG.tar.gz"
 cd "libpng-$LIBPNG"
 patch -p1 < "$SCRIPTDIR/patches/libpng-1.6.56-apng.patch"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -DCMAKE_INSTALL_RPATH="\$ORIGIN" -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -142,7 +149,7 @@ echo "Building Brotli..."
 rm -fr "brotli-$BROTLI"
 tar xf "brotli-$BROTLI.tar.gz"
 cd "brotli-$BROTLI"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=OFF -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON -B build
 ninja -C build install
 cd ..
 rm -fr "brotli-$BROTLI"
@@ -153,8 +160,8 @@ tar xf "freetype-$FREETYPE.tar.gz"
 cd "freetype-$FREETYPE"
 patch -p1 < "$SCRIPTDIR/patches/freetype-harfbuzz-soname.patch"
 patch -p1 < "$SCRIPTDIR/patches/freetype-static-brotli.patch"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DFT_REQUIRE_ZLIB=ON -DFT_REQUIRE_PNG=ON -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON \
+  -DFT_REQUIRE_ZLIB=ON -DFT_REQUIRE_PNG=ON -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -164,7 +171,7 @@ echo "Building HarfBuzz..."
 rm -fr "harfbuzz-$HARFBUZZ"
 tar xf "harfbuzz-$HARFBUZZ.tar.gz"
 cd "harfbuzz-$HARFBUZZ"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DHB_BUILD_UTILS=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -182,7 +189,7 @@ tar xf "qtbase-everywhere-src-$QT.tar.xz"
 cd "qtbase-everywhere-src-$QT"
 mkdir build
 cd build
-../configure -prefix "$INSTALLDIR" -release -dbus-linked -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=ON -DFEATURE_freetype=ON -DFEATURE_system_freetype=ON -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
+../configure -prefix "$INSTALLDIR" -release -dbus-linked -qt-doubleconversion -ssl -openssl-runtime -opengl desktop -qpa xcb,wayland -xkbcommon -xcb -- "${CMAKE_COMMON_QT[@]}" -DCMAKE_INSTALL_LIBDIR=lib -DINSTALL_LIBDIR=lib -DFEATURE_cups=OFF -DFEATURE_dbus=ON -DFEATURE_icu=OFF -DFEATURE_sql=OFF -DFEATURE_png=ON -DFEATURE_system_png=OFF -DFEATURE_jpeg=ON -DFEATURE_system_jpeg=OFF -DFEATURE_system_zlib=ON -DFEATURE_freetype=ON -DFEATURE_system_freetype=ON -DFEATURE_harfbuzz=ON -DFEATURE_system_harfbuzz=ON -DFEATURE_gtk3=OFF -DFEATURE_brotli=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -194,7 +201,7 @@ tar xf "qtimageformats-everywhere-src-$QT.tar.xz"
 cd "qtimageformats-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_webp=ON -DFEATURE_system_webp=OFF
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}" -DFEATURE_webp=ON -DFEATURE_system_webp=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -206,7 +213,7 @@ tar xf "qtwayland-everywhere-src-$QT.tar.xz"
 cd "qtwayland-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}"
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -220,7 +227,7 @@ patch -p1 < "$SCRIPTDIR/patches/qttools-linguist-without-quick.patch"
 patch -p1 < "$SCRIPTDIR/patches/qttools-disable-clang.patch"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}" -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=ON -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -232,7 +239,7 @@ tar xf "qttranslations-everywhere-src-$QT.tar.xz"
 cd "qttranslations-everywhere-src-$QT"
 mkdir build
 cd build
-"$INSTALLDIR/bin/qt-configure-module" .. -- -DCMAKE_PREFIX_PATH="$INSTALLDIR" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DQT_GENERATE_SBOM=ON
+"$INSTALLDIR/bin/qt-configure-module" .. -- "${CMAKE_COMMON_QT[@]}"
 cmake --build . --parallel
 ninja install
 cd ../../
@@ -253,7 +260,7 @@ rm -fr "libjpeg-turbo-$LIBJPEGTURBO"
 tar xf "libjpeg-turbo-$LIBJPEGTURBO.tar.gz"
 cd "libjpeg-turbo-$LIBJPEGTURBO"
 patch -p1 < "$SCRIPTDIR/patches/libjpeg-turbo-disable-rpath.patch"
-cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -263,7 +270,7 @@ echo "Building Zstandard..."
 rm -fr "zstd-$ZSTD"
 tar xf "zstd-$ZSTD.tar.gz"
 cd "zstd-$ZSTD"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build -G Ninja build/cmake
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build build/cmake
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -273,10 +280,9 @@ echo "Building WebP..."
 rm -fr "libwebp-$LIBWEBP"
 tar xf "libwebp-$LIBWEBP.tar.gz"
 cd "libwebp-$LIBWEBP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+cmake "${CMAKE_COMMON[@]}" -B build \
   -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF \
-  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+  -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -286,11 +292,10 @@ echo "Building libzip..."
 rm -fr "libzip-$LIBZIP"
 tar xf "libzip-$LIBZIP.tar.gz"
 cd "libzip-$LIBZIP"
-cmake "${CMAKE_COMMON[@]}" -B build -G Ninja \
+cmake "${CMAKE_COMMON[@]}" -B build \
   -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF \
   -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON \
-  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_RPATH="\$ORIGIN"
+  -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -300,8 +305,8 @@ echo "Building SDL..."
 rm -fr "SDL-release-$SDL3"
 tar xf "SDL-release-$SDL3.tar.gz"
 cd "SDL-release-$SDL3"
-cmake -B build "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -G Ninja
+cmake -B build "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON \
+  -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -313,8 +318,8 @@ unzip "sqlite-amalgamation-$SQLITE.zip"
 cd "sqlite-amalgamation-$SQLITE"
 patch -p1 < "$SCRIPTDIR/patches/sqlite-cmake.patch"
 sed -i -e "s/@@SQLITE_LONG_VERSION@@/$SQLITE_LONG_VERSION/" CMakeLists.txt
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" \
+  -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -324,7 +329,7 @@ echo "Building shaderc..."
 rm -fr "shaderc-$SHADERC_COMMIT"
 tar xf "shaderc-$SHADERC_COMMIT.tar.gz"
 cd "shaderc-$SHADERC_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -333,7 +338,7 @@ rm -fr "shaderc-$SHADERC_COMMIT"
 echo "Building SPIRV-Cross..."
 cd SPIRV-Cross
 rm -fr build
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=OFF -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build
 cmake --build build --parallel
 ninja -C build install
 rm -fr build
@@ -343,7 +348,7 @@ echo "Building cpuinfo..."
 rm -fr "cpuinfo-$CPUINFO_COMMIT"
 tar xf "cpuinfo-$CPUINFO_COMMIT.tar.gz"
 cd "cpuinfo-$CPUINFO_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -353,7 +358,7 @@ echo "Building discord-rpc..."
 rm -fr "discord-rpc-$DISCORD_RPC_COMMIT"
 tar xf "discord-rpc-$DISCORD_RPC_COMMIT.tar.gz"
 cd "discord-rpc-$DISCORD_RPC_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -363,7 +368,7 @@ echo "Building plutosvg..."
 rm -fr "plutosvg-$PLUTOSVG_COMMIT"
 tar xf "plutosvg-$PLUTOSVG_COMMIT.tar.gz"
 cd "plutosvg-$PLUTOSVG_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -DCMAKE_INSTALL_RPATH="\$ORIGIN" -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..
@@ -373,7 +378,7 @@ echo "Building soundtouch..."
 rm -fr "soundtouch-$SOUNDTOUCH_COMMIT"
 tar xf "soundtouch-$SOUNDTOUCH_COMMIT.tar.gz"
 cd "soundtouch-$SOUNDTOUCH_COMMIT"
-cmake "${CMAKE_COMMON[@]}" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build -G Ninja
+cmake "${CMAKE_COMMON[@]}" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build
 cmake --build build --parallel
 ninja -C build install
 cd ..

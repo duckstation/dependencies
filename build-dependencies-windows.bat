@@ -146,6 +146,12 @@ if %DEBUG%==1 (
 
 set FORCEPDB=-DCMAKE_EXE_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG" -DCMAKE_MODULE_LINKER_FLAGS_RELEASE="/DEBUG"
 
+rem Options shared by every CMake project, the Qt modules pick up the rest from qtbase.
+set CMAKE_COMMON=-DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -G Ninja
+set CMAKE_COMMON_MSVC=%CMAKEARCH% %CMAKE_COMMON%
+set CMAKE_COMMON_CLANGCL=%CLANGCLTOOLCHAIN% %CMAKE_COMMON%
+set CMAKE_COMMON_QT=%FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON
+
 if "%QTBINARIES%"=="0" goto buildqtsource
 
 set "QTPACKAGEVERSION=%QT:.=%"
@@ -202,7 +208,7 @@ rmdir /S /Q "qtimageformats-everywhere-src-%QT%"
 cd "qtimageformats-everywhere-src-%QT%" || goto error
 mkdir build || goto error
 cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_webp=ON -DFEATURE_system_webp=OFF || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %CMAKE_COMMON_QT% -DFEATURE_webp=ON -DFEATURE_system_webp=OFF || goto error
 cmake --build . --parallel || goto error
 ninja install || goto error
 cd ..\.. || goto error
@@ -215,7 +221,7 @@ cd "qttools-everywhere-src-%QT%" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\qttools-linguist-without-quick.patch" || goto error
 mkdir build || goto error
 cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=%QTDESIGNER% -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF || goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %CMAKE_COMMON_QT% -DFEATURE_assistant=OFF -DFEATURE_clang=OFF -DFEATURE_designer=%QTDESIGNER% -DFEATURE_kmap2qmap=OFF -DFEATURE_pixeltool=OFF -DFEATURE_pkg_config=OFF -DFEATURE_qev=OFF -DFEATURE_qtattributionsscanner=OFF -DFEATURE_qtdiag=OFF -DFEATURE_qtplugininfo=OFF || goto error
 cmake --build . --parallel || goto error
 ninja install || goto error
 cd ..\.. || goto error
@@ -227,7 +233,7 @@ rmdir /S /Q "qttranslations-everywhere-src-%QT%"
 cd "qttranslations-everywhere-src-%QT%" || goto error
 mkdir build || goto error
 cd build || goto error
-call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %FORCEPDB%  -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON|| goto error
+call "%INSTALLDIR%\bin\qt-configure-module.bat" .. -- %CMAKE_COMMON_QT% || goto error
 cmake --build . --parallel || goto error
 ninja install || goto error
 cd ..\.. || goto error
@@ -240,7 +246,7 @@ rmdir /S /Q "zlib-ng-%ZLIBNG%"
 tar -xf "zlib-ng-%ZLIBNG%.tar.gz" || goto error
 cd "zlib-ng-%ZLIBNG%" || goto error
 rem BUILD_SHARED_LIBS deliberately ommitted so that both shared and static libraries are built, we need static for the updater.
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -251,7 +257,7 @@ rmdir /S /Q "libpng-%LIBPNG%"
 tar -xf "libpng-%LIBPNG%.tar.gz" || goto error
 cd "libpng-%LIBPNG%" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\libpng-1.6.56-apng.patch" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -261,7 +267,7 @@ echo Building libjpeg...
 rmdir /S /Q "libjpeg-turbo-%LIBJPEGTURBO%"
 tar -xf "libjpeg-turbo-%LIBJPEGTURBO%.tar.gz" || goto error
 cd "libjpeg-turbo-%LIBJPEGTURBO%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DWITH_TESTS=OFF -DWITH_TOOLS=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -271,7 +277,7 @@ echo Building Zstandard...
 rmdir /S /Q "zstd-%ZSTD%"
 tar -xf "zstd-%ZSTD%.tar.gz" --exclude "zstd-%ZSTD%/tests/cli-tests/*" || goto error
 cd "zstd-%ZSTD%"
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build -G Ninja build/cmake
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DZSTD_BUILD_SHARED=ON -DZSTD_BUILD_STATIC=OFF -DZSTD_BUILD_PROGRAMS=OFF -B build build/cmake
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -281,7 +287,7 @@ echo Building Brotli...
 rmdir /S /Q "brotli-%BROTLI%"
 tar -xf "brotli-%BROTLI%.tar.gz" || goto error
 cd "brotli-%BROTLI%" || goto error
-cmake -B build %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=OFF -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON -G Ninja || goto error
+cmake -B build %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=OFF -DBROTLI_BUILD_TOOLS=OFF -DBROTLI_DISABLE_TESTS=ON || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -291,7 +297,7 @@ echo Building WebP...
 rmdir /S /Q "libwebp-%LIBWEBP%"
 tar -xf "libwebp-%LIBWEBP%.tar.gz" || goto error
 cd "libwebp-%LIBWEBP%" || goto error
-cmake -B build %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON -G Ninja || goto error
+cmake -B build %CMAKE_COMMON_MSVC% -DWEBP_BUILD_ANIM_UTILS=OFF -DWEBP_BUILD_CWEBP=OFF -DWEBP_BUILD_DWEBP=OFF -DWEBP_BUILD_GIF2WEBP=OFF -DWEBP_BUILD_IMG2WEBP=OFF -DWEBP_BUILD_VWEBP=OFF -DWEBP_BUILD_WEBPINFO=OFF -DWEBP_BUILD_WEBPMUX=OFF -DWEBP_BUILD_EXTRAS=OFF -DBUILD_SHARED_LIBS=ON || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -301,7 +307,7 @@ echo Building libzip...
 rmdir /S /Q "libzip-%LIBZIP%"
 tar -xf "libzip-%LIBZIP%.tar.gz" || goto error
 cd "libzip-%LIBZIP%" || goto error
-cmake -B build %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF -G Ninja || goto error
+cmake -B build %CMAKE_COMMON_MSVC% -DENABLE_COMMONCRYPTO=OFF -DENABLE_GNUTLS=OFF -DENABLE_MBEDTLS=OFF -DENABLE_OPENSSL=OFF -DENABLE_WINDOWS_CRYPTO=OFF -DENABLE_BZIP2=OFF -DENABLE_LZMA=OFF -DENABLE_ZSTD=ON -DBUILD_SHARED_LIBS=ON -DLIBZIP_DO_INSTALL=ON -DBUILD_TOOLS=OFF -DBUILD_REGRESS=OFF -DBUILD_OSSFUZZ=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -313,7 +319,7 @@ tar -xf "freetype-%FREETYPE%.tar.gz" || goto error
 cd "freetype-%FREETYPE%" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\freetype-harfbuzz-soname.patch" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\freetype-static-brotli.patch" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DFT_REQUIRE_ZLIB=TRUE -DFT_REQUIRE_PNG=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DFT_REQUIRE_ZLIB=TRUE -DFT_REQUIRE_PNG=TRUE -DFT_DISABLE_BZIP2=TRUE -DFT_REQUIRE_BROTLI=TRUE -DFT_DYNAMIC_HARFBUZZ=TRUE -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -323,7 +329,7 @@ echo Building HarfBuzz...
 rmdir /S /Q "harfbuzz-%HARFBUZZ%"
 tar -xf "harfbuzz-%HARFBUZZ%.tar.gz" --exclude "harfbuzz-%HARFBUZZ%/CLAUDE.md" || goto error
 cd "harfbuzz-%HARFBUZZ%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DHB_BUILD_UTILS=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -333,7 +339,7 @@ echo Building SDL...
 rmdir /S /Q "SDL-release-%SDL3%"
 tar -xf "SDL-release-%SDL3%.tar.gz" || goto error
 cd "SDL-release-%SDL3%" || goto error
-cmake -B build %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release %FORCEPDB% -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_INSTALL_CMAKEDIR_ROOT="%INSTALLDIR%\lib\cmake\SDL3" -G Ninja || goto error
+cmake -B build %CMAKE_COMMON_MSVC% %FORCEPDB% -DBUILD_SHARED_LIBS=ON -DSDL_SHARED=ON -DSDL_STATIC=OFF -DSDL_TESTS=OFF -DSDL_INSTALL_CMAKEDIR_ROOT="%INSTALLDIR%\lib\cmake\SDL3" || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 copy build\SDL3.pdb "%INSTALLDIR%\bin" || goto error
@@ -346,7 +352,7 @@ rmdir /S /Q "sqlite-amalgamation-%SQLITE%"
 cd "sqlite-amalgamation-%SQLITE%" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\sqlite-cmake.patch" || goto error
 powershell -Command "(Get-Content CMakeLists.txt) -replace '@@SQLITE_LONG_VERSION@@', '%SQLITE_LONG_VERSION%' | Set-Content CMakeLists.txt" || goto error
-cmake -B build %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release %FORCEPDB% -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF -G Ninja || goto error
+cmake -B build %CMAKE_COMMON_MSVC% %FORCEPDB% -DENABLE_SHARED=ON -DENABLE_STATIC=OFF -DENABLE_RTREE=OFF -DENABLE_ZLIB=OFF || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -356,7 +362,7 @@ echo Building shaderc...
 rmdir /S /Q "shaderc-%SHADERC_COMMIT%"
 tar -xf "shaderc-%SHADERC_COMMIT%.tar.gz" || goto error
 cd "shaderc-%SHADERC_COMMIT%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -DSHADERC_ENABLE_SHARED_CRT=ON -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_MSVC% -DSHADERC_SKIP_TESTS=ON -DSHADERC_SKIP_EXAMPLES=ON -DSHADERC_SKIP_EXECUTABLES=ON -DSHADERC_SKIP_COPYRIGHT_CHECK=ON -DSHADERC_ENABLE_HLSL=OFF -DSHADERC_ENABLE_SHARED_CRT=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -365,7 +371,7 @@ rmdir /S /Q "shaderc-%SHADERC_COMMIT%"
 echo Building SPIRV-Cross...
 cd SPIRV-Cross || goto error
 rmdir /S /Q "build"
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=ON -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build -G Ninja
+cmake %CMAKE_COMMON_MSVC% -DSPIRV_CROSS_SHARED=ON -DSPIRV_CROSS_STATIC=OFF -DSPIRV_CROSS_CLI=OFF -DSPIRV_CROSS_ENABLE_TESTS=OFF -DSPIRV_CROSS_ENABLE_GLSL=ON -DSPIRV_CROSS_ENABLE_HLSL=ON -DSPIRV_CROSS_ENABLE_MSL=OFF -DSPIRV_CROSS_ENABLE_CPP=OFF -DSPIRV_CROSS_ENABLE_REFLECT=OFF -DSPIRV_CROSS_ENABLE_C_API=ON -DSPIRV_CROSS_ENABLE_UTIL=ON -B build
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 rmdir /S /Q "build"
@@ -375,7 +381,7 @@ echo Building cpuinfo...
 rmdir /S /Q "cpuinfo-%CPUINFO_COMMIT%"
 tar -xf "cpuinfo-%CPUINFO_COMMIT%.tar.gz" || goto error
 cd "cpuinfo-%CPUINFO_COMMIT%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build -G Ninja
+cmake %CMAKE_COMMON_MSVC% -DCPUINFO_LIBRARY_TYPE=shared -DCPUINFO_RUNTIME_TYPE=shared -DCPUINFO_LOG_LEVEL=error -DCPUINFO_LOG_TO_STDIO=ON -DCPUINFO_BUILD_TOOLS=OFF -DCPUINFO_BUILD_UNIT_TESTS=OFF -DCPUINFO_BUILD_MOCK_TESTS=OFF -DCPUINFO_BUILD_BENCHMARKS=OFF -DUSE_SYSTEM_LIBS=ON -B build
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -385,7 +391,7 @@ echo Building discord-rpc...
 rmdir /S /Q "discord-rpc-%DISCORD_RPC_COMMIT%"
 tar -xf "discord-rpc-%DISCORD_RPC_COMMIT%.tar.gz" || goto error
 cd "discord-rpc-%DISCORD_RPC_COMMIT%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -B build -G Ninja
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -B build
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -395,7 +401,7 @@ echo Building plutosvg...
 rmdir /S /Q "plutosvg-%PLUTOSVG_COMMIT%"
 tar -xf "plutosvg-%PLUTOSVG_COMMIT%.tar.gz" || goto error
 cd "plutosvg-%PLUTOSVG_COMMIT%" || goto error
-cmake %CMAKEARCH% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -B build -G Ninja
+cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DPLUTOSVG_ENABLE_FREETYPE=ON -DPLUTOSVG_BUILD_EXAMPLES=OFF -B build
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
@@ -405,7 +411,7 @@ echo Building soundtouch...
 rmdir /S /Q "soundtouch-%SOUNDTOUCH_COMMIT%"
 tar -xf "soundtouch-%SOUNDTOUCH_COMMIT%.tar.gz" || goto error
 cd "soundtouch-%SOUNDTOUCH_COMMIT%" || goto error
-cmake %CLANGCLTOOLCHAIN% -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build -G Ninja || goto error
+cmake %CMAKE_COMMON_CLANGCL% -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
 cd .. || goto error
