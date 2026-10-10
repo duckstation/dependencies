@@ -281,9 +281,13 @@ rmdir /S /Q "libpng-%LIBPNG%"
 tar -xf "libpng-%LIBPNG%.tar.gz" || goto error
 cd "libpng-%LIBPNG%" || goto error
 %PATCH% -p1 < "%SCRIPTDIR%\patches\libpng-1.6.56-apng.patch" || goto error
+rem libpng substitutes CMAKE_C_FLAGS into a generated CMake script, where the backslashes in the
+rem /d1trimfile path are parsed as escape sequences. It does not use __FILE__, so leave it out here.
+set "CFLAGS=/Brepro"
 cmake %CMAKE_COMMON_MSVC% -DBUILD_SHARED_LIBS=ON -DPNG_TESTS=OFF -DPNG_STATIC=OFF -DPNG_SHARED=ON -DPNG_TOOLS=OFF -B build || goto error
 cmake --build build --parallel || goto error
 ninja -C build install || goto error
+set "CFLAGS=%CFLAGS_MSVC%"
 cd .. || goto error
 rmdir /S /Q "libpng-%LIBPNG%"
 
