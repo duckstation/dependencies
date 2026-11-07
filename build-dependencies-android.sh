@@ -52,6 +52,10 @@ fi
 # on where the build and install directories are located. Helpful for reproducible builds.
 BUILDDIR="$PWD/deps-build"
 CFLAGS_COMMON="-ffile-prefix-map=$BUILDDIR=. -ffile-prefix-map=$INSTALLDIR=deps"
+
+# The NDK toolchain file unconditionally adds -g, expecting Gradle to strip the libraries later.
+# Turn it back off, we only want the symbol table (function names), not the DWARF source info.
+CFLAGS_COMMON="$CFLAGS_COMMON -g0"
 CMAKE_COMMON=(
   -G Ninja
   -DCMAKE_BUILD_TYPE=Release
@@ -66,6 +70,10 @@ CMAKE_COMMON=(
   # Link with the install RPATH. Otherwise CMake rewrites the build RPATH on installation,
   # which leaves padding that depends on the length of the build directory in the binary.
   -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
+  # Our zlib is installed as libz-bundled.so, because the system libz.so always wins at runtime.
+  # FindZLIB only searches for the standard names, and would pick up the NDK's libz.so instead.
+  -DZLIB_LIBRARY="$INSTALLDIR/lib/libz-bundled.so"
+  -DZLIB_INCLUDE_DIR="$INSTALLDIR/include"
 )
 
 source "$SCRIPTDIR/versions"
@@ -80,11 +88,11 @@ mkdir -p deps-build
 cd deps-build
 
 # Build zlib first because of the things that depend on it.
-# Disabled because it currently causes crashes on armhf.
 echo "Building zlib-ng..."
 rm -fr "zlib-ng-$ZLIBNG"
 tar xf "zlib-ng-$ZLIBNG.tar.gz"
 cd "zlib-ng-$ZLIBNG"
+patch -p1 < "$SCRIPTDIR/patches/zlib-ng-android-soname.patch"
 cmake "${CMAKE_COMMON[@]}" -DBUILD_SHARED_LIBS=ON -DZLIB_COMPAT=ON -DBUILD_TESTING=OFF -DWITH_BENCHMARK_APPS=OFF -DWITH_GTEST=OFF -B build
 cmake --build build --parallel
 ninja -C build install

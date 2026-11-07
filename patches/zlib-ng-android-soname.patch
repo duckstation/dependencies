@@ -1,0 +1,17 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1449,7 +1449,13 @@
+     endif()
+ else()
+     # On unix-like platforms the library is almost always called libz
+-    set_target_properties(${ZLIB_INSTALL_LIBRARIES} PROPERTIES OUTPUT_NAME z${SUFFIX})
++    if(ANDROID)
++        # libz.so is an NDK system library, the dynamic linker always resolves it to the
++        # system copy, even when the application bundles its own. Use a distinct name.
++        set_target_properties(${ZLIB_INSTALL_LIBRARIES} PROPERTIES OUTPUT_NAME z-bundled${SUFFIX})
++    else()
++        set_target_properties(${ZLIB_INSTALL_LIBRARIES} PROPERTIES OUTPUT_NAME z${SUFFIX})
++    endif()
+ endif()
+ 
+ if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
