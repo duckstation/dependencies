@@ -157,7 +157,7 @@ jobs:
   build-macos:
     name: "🍎 MacOS"
     needs: build-sources
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 240
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
@@ -173,8 +173,8 @@ jobs:
     - name: Extract Sources
       run: unzip deps-sources/deps-sources.zip
 
-    - name: Use Xcode 26.5
-      run: sudo xcode-select -s /Applications/Xcode_26.5.app
+    - name: Use Xcode 27.2
+      run: sudo xcode-select -s /Applications/Xcode_27.2.app
 
     - name: Build Dependencies
       run: ./build-dependencies-mac.sh -skip-download macos-universal
