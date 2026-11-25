@@ -49,7 +49,7 @@ jobs:
   build-windows-source:
     name: "💻 Windows (Qt Source)"
     needs: build-sources
-    runs-on: windows-2025-vs2026
+    runs-on: windows-2025
     timeout-minutes: 240
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
@@ -100,7 +100,7 @@ jobs:
   build-windows-installer:
     name: "💻 Windows (Qt Installer)"
     needs: build-sources
-    runs-on: windows-2025-vs2026
+    runs-on: windows-2025
     timeout-minutes: 240
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
