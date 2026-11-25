@@ -10,7 +10,7 @@ if /i "%ARCH%"=="x64" (
   set "QTHOSTPATH="
   set "QTDESIGNER=ON"
   set "DXCARCH=x64"
-  set "CLANGCLTOOLCHAIN=-DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl"
+  set "CLANGCLTOOLCHAIN="
 ) else if /i "%ARCH%"=="arm64" (
   set "ARCH=arm64"
   set "VCVARS=vcvarsamd64_arm64.bat"
@@ -30,6 +30,14 @@ if exist "%ProgramFiles%\Microsoft Visual Studio\18\Enterprise\VC\Auxiliary\Buil
   call "%ProgramFiles%\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\%VCVARS%"
 ) else (
   echo Visual Studio 2026 not found.
+  goto error
+)
+
+rem vcvars does not put the bundled LLVM on PATH, so clang-cl would otherwise resolve to any other
+rem LLVM install (e.g. the older one on GitHub runners), which the MSVC STL may reject.
+set "CLANGCL=%VCINSTALLDIR%Tools\Llvm\x64\bin\clang-cl.exe"
+if not exist "%CLANGCL%" (
+  echo Visual Studio LLVM/clang-cl component not found.
   goto error
 )
 
@@ -173,7 +181,7 @@ set CMAKE_REPRO_MSVC=-DCMAKE_STATIC_LINKER_FLAGS=/Brepro
 rem Options shared by every CMake project, the Qt modules pick up the rest from qtbase.
 set CMAKE_COMMON=-DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DCMAKE_INSTALL_PREFIX="%INSTALLDIR%" -G Ninja
 set CMAKE_COMMON_MSVC=%CMAKEARCH% %CMAKE_COMMON% %CMAKE_REPRO_MSVC%
-set CMAKE_COMMON_CLANGCL=%CLANGCLTOOLCHAIN% %CMAKE_COMMON%
+set CMAKE_COMMON_CLANGCL=%CLANGCLTOOLCHAIN% -DCMAKE_C_COMPILER="%CLANGCL%" -DCMAKE_CXX_COMPILER="%CLANGCL%" %CMAKE_COMMON%
 set CMAKE_COMMON_QT=%FORCEPDB% %CMAKE_REPRO_MSVC% -DCMAKE_PREFIX_PATH="%INSTALLDIR%" -DQT_GENERATE_SBOM=ON
 
 if "%QTBINARIES%"=="0" goto buildqtsource
